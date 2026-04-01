@@ -813,3 +813,228 @@ input[type="range"].gold-slider::-webkit-slider-thumb {
   border: 2px solid #8E6D10;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
 }
+
+/* ══════════════════════════════════════════
+   PRACTICE SCREEN LAYOUT
+   Reference: dark wood + aged gold
+   Proportions: header 8% | score 38% | controls 8% | keyboard 46%
+   ══════════════════════════════════════════ */
+
+/* Aged gold palette */
+:root {
+  --aged-gold-bright:   #C9A84C;   /* warm amber, not too yellow */
+  --aged-gold-mid:      #A07828;   /* oxidised mid-tone */
+  --aged-gold-dark:     #6B4E18;   /* deep patina */
+  --aged-gold-dim:      rgba(180, 135, 45, 0.35);
+  --aged-gold-ghost:    rgba(160, 120, 38, 0.18);
+  --dark-wood:          #1C1108;
+  --dark-wood-mid:      #2E1C0C;
+}
+
+.practice-screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--dark-wood);
+  overflow: hidden;
+}
+
+/* ── Header ── */
+.practice-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 24px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 30;
+  border-bottom: 1px solid var(--aged-gold-ghost);
+  background: linear-gradient(to bottom, #2a1c0c, #1c1108);
+}
+
+.practice-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--aged-gold-mid);
+  font-family: var(--font-serif);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: color 120ms;
+  background: none;
+  border: none;
+  padding: 0;
+}
+.practice-back-btn:hover {
+  color: var(--aged-gold-bright);
+}
+
+.practice-title-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.practice-title {
+  font-family: var(--font-elegant);
+  font-size: 22px;
+  font-style: italic;
+  letter-spacing: 0.12em;
+  /* Aged gold gradient — warm, not flashy */
+  background: linear-gradient(to bottom,
+    #e8c87a 0%,
+    #c9a84c 40%,
+    #a07828 70%,
+    #c9a84c 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.practice-subtitle {
+  font-family: var(--font-serif);
+  font-size: 10px;
+  color: var(--aged-gold-mid);
+  opacity: 0.7;
+  letter-spacing: 0.15em;
+  font-style: italic;
+}
+
+/* ── Sheet music area ── */
+.practice-score-area {
+  /* Take remaining space after header, controls, keyboard */
+  flex: 1 1 0;
+  min-height: 180px;
+  position: relative;
+  margin: 6px 16px 0;
+  border-radius: 3px;
+  overflow: hidden;
+  /* Dark parchment-like background */
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(60, 45, 18, 0.4) 0%, transparent 60%),
+    linear-gradient(to bottom, #1e1a10, #141008, #1a160e);
+  /* Aged gold frame */
+  border: 1.5px solid var(--aged-gold-dim);
+  box-shadow:
+    inset 0 0 60px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(0, 0, 0, 0.8),
+    0 0 0 3px var(--aged-gold-ghost);
+}
+
+.practice-score-inner {
+  width: 100%;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 10px 20px;
+}
+
+/* Gold CSS override for VexFlow SVG */
+.practice-score-area .score-renderer svg path,
+.practice-score-area .score-renderer svg line,
+.practice-score-area .score-renderer svg rect,
+.practice-score-area .score-renderer svg circle,
+.practice-score-area .score-renderer svg text,
+.practice-score-area .score-renderer svg polygon {
+  fill: #C9A84C !important;
+  stroke: rgba(180, 135, 45, 0.6) !important;
+}
+.practice-score-area .score-renderer svg path[fill="none"],
+.practice-score-area .score-renderer svg rect[fill="none"] {
+  fill: none !important;
+}
+
+/* Progress bar */
+.practice-progress-track {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: rgba(0, 0, 0, 0.6);
+}
+.practice-progress-fill {
+  height: 100%;
+  background: linear-gradient(to right, var(--aged-gold-dark), var(--aged-gold-bright), #e8c87a);
+}
+
+/* ── Controls bar ── */
+.practice-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 28px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 30;
+  border-top: 1px solid var(--aged-gold-ghost);
+  background: linear-gradient(to bottom, #1c1108, #241608);
+}
+
+.practice-play-btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  /* Aged gold ring */
+  background: linear-gradient(135deg, #e8c87a, #c9a84c, #a07828, #c9a84c);
+  padding: 2px;
+  cursor: pointer;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(100, 75, 20, 0.4),
+    inset 0 1px 0 rgba(232, 200, 122, 0.3);
+  transition: transform 80ms, box-shadow 80ms;
+  border: none;
+}
+.practice-play-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+}
+
+.practice-play-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1e1408, #0e0c06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--aged-gold-bright);
+}
+.practice-play-btn:hover .practice-play-inner {
+  color: #e8c87a;
+}
+
+.practice-reset-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  font-family: var(--font-serif);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: var(--aged-gold-mid);
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--aged-gold-ghost);
+  border-radius: 2px;
+  transition: border-color 120ms, color 120ms;
+}
+.practice-reset-btn:hover {
+  border-color: var(--aged-gold-dim);
+  color: var(--aged-gold-bright);
+}
+
+/* ── Piano keyboard — ~40% of screen ── */
+.practice-keyboard {
+  flex-shrink: 0;
+  /* 40vh gives a generous keyboard. calc clamps it between 220px and 320px. */
+  height: clamp(220px, 40vh, 320px);
+  position: relative;
+  z-index: 20;
+}

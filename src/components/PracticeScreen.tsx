@@ -128,34 +128,33 @@ export function PracticeScreen({
   }, [reset])
 
   return (
-    <div className="h-full flex flex-col bg-piano-black overflow-hidden relative">
+    <div className="practice-screen">
       <OrnateFrame variant="full" className="absolute inset-0 pointer-events-none z-40" />
 
-      {/* Top bar */}
-      <div className="flex items-center justify-between px-6 py-3 relative z-30">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={onBack}
-            className="flex items-center gap-2 text-gold/50 hover:text-gold transition-colors group cursor-pointer"
-          >
-            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-            <span className="font-serif text-sm tracking-wider">Home</span>
-          </button>
-          <span className="text-gold/15">|</span>
-          <span className="text-2xl font-serif metallic-gold tracking-wider italic">Debussy</span>
+      {/* ── Header ── */}
+      <div className="practice-header">
+        <button onClick={onBack} className="practice-back-btn group">
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          <span>Home</span>
+        </button>
+
+        <div className="practice-title-block">
+          <span className="practice-title">Debussy</span>
+          <span className="practice-subtitle">
+            {score.title} · {score.composer} · {bpm} BPM
+          </span>
         </div>
-        <div className="flex items-center gap-3 text-gold/40 text-xs font-serif italic tracking-wider">
-          <span>{score.title}</span>
+
+        <div className="flex items-center gap-4 text-base font-serif">
+          <span style={{ color: '#6dbf8a' }}>✓ {stats.correct}</span>
           <span className="text-gold/20">·</span>
-          <span>{score.composer}</span>
-          <span className="text-gold/20">·</span>
-          <span>{bpm} BPM</span>
+          <span style={{ color: '#bf6d6d' }}>✗ {stats.wrong}</span>
         </div>
       </div>
 
-      {/* Sheet music area */}
-      <div className="flex-1 sheet-music-dark mx-6 rounded-sm" style={{ minHeight: '280px', overflowX: 'auto' }}>
-        <div style={{ padding: '8px 16px' }}>
+      {/* ── Sheet music ── */}
+      <div className="practice-score-area">
+        <div className="practice-score-inner">
           <ScoreRenderer
             score={score}
             cursorBeat={isPlaying ? currentBeat : undefined}
@@ -164,56 +163,42 @@ export function PracticeScreen({
             darkMode
           />
         </div>
+
+        {/* Progress bar — overlaid at bottom of score area */}
+        {isPlaying && (
+          <div className="practice-progress-track">
+            <motion.div
+              className="practice-progress-fill"
+              style={{ width: `${progress * 100}%` }}
+              transition={{ duration: 0.1 }}
+            />
+          </div>
+        )}
       </div>
 
-      {/* Progress bar */}
-      {isPlaying && (
-        <div className="h-1 mx-6 bg-black/60">
-          <motion.div
-            className="h-full gold-shine"
-            style={{ width: `${progress * 100}%` }}
-            transition={{ duration: 0.1 }}
-          />
-        </div>
-      )}
+      {/* ── Controls ── */}
+      <div className="practice-controls">
+        <LyreIcon size={28} className="text-gold/20 shrink-0" />
 
-      {/* Controls bar below sheet music */}
-      <div className="flex items-center justify-between px-12 py-4 relative z-30">
-        {/* Left: lyre decoration */}
-        <LyreIcon size={32} className="text-gold/25" />
-
-        {/* Center: play button + score */}
-        <div className="flex items-center gap-8">
-          <button
-            onClick={isPlaying ? () => { stop(); isPlayingRef.current = false } : handleStart}
-            className="w-16 h-16 rounded-full bg-gradient-to-br from-[#d4af37] via-[#f9e29c] to-[#b8860b] p-[2px] shadow-[0_5px_20px_rgba(0,0,0,0.6)] active:translate-y-1 transition-all group cursor-pointer"
-          >
-            <div className="w-full h-full rounded-full bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a] flex items-center justify-center text-gold group-hover:text-white transition-colors">
-              {isPlaying
-                ? <Pause className="w-8 h-8 fill-current" />
-                : <Play className="w-8 h-8 fill-current ml-1" />}
-            </div>
-          </button>
-
-          <div className="flex items-center gap-4 text-lg font-serif">
-            <span className="text-green-500">✓ {stats.correct}</span>
-            <span className="text-gold/20">·</span>
-            <span className="text-red-500">✗ {stats.wrong}</span>
-          </div>
-        </div>
-
-        {/* Right: reset */}
         <button
-          onClick={handleReset}
-          className="ornate-button-dark px-6 py-2 text-sm flex items-center gap-2 cursor-pointer"
+          onClick={isPlaying ? () => { stop(); isPlayingRef.current = false } : handleStart}
+          className="practice-play-btn group"
         >
-          <RotateCcw className="w-4 h-4" />
-          <span className="font-serif tracking-wider">Reset</span>
+          <div className="practice-play-inner">
+            {isPlaying
+              ? <Pause className="w-7 h-7 fill-current" />
+              : <Play className="w-7 h-7 fill-current ml-0.5" />}
+          </div>
+        </button>
+
+        <button onClick={handleReset} className="practice-reset-btn">
+          <RotateCcw className="w-3.5 h-3.5" />
+          <span>Reset</span>
         </button>
       </div>
 
-      {/* Piano keyboard */}
-      <div className="h-52 relative z-20">
+      {/* ── Piano keyboard — occupies the bottom 40% ── */}
+      <div className="practice-keyboard">
         <PianoKeyboard activeKeys={pressedNotes} />
       </div>
     </div>
