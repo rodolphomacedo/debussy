@@ -186,6 +186,9 @@ export function PianoKeyboard({
               {/* 3D top bevel */}
               <div className="black-key-top" />
 
+              {/* Candlelight underglow when pressed */}
+              {isActive && <div className="black-key-glow" />}
+
               {/* Guide glow overlay */}
               {isGuide && <div className="key-guide-glow black" />}
             </div>

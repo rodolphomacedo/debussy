@@ -53,6 +53,9 @@ export async function initAudio(): Promise<void> {
 
   await Tone.start()
 
+  // Eliminate scheduling lookahead for instant response to key presses
+  Tone.getContext().lookAhead = 0
+
   piano = new Tone.Sampler({
     urls: SALAMANDER_URLS,
     baseUrl: SALAMANDER_BASE_URL,
