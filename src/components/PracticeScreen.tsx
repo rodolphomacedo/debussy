@@ -154,8 +154,8 @@ export function PracticeScreen({
       </div>
 
       {/* Sheet music area — dark background */}
-      <div className="flex-1 sheet-music-dark flex items-center justify-center mx-6 rounded-sm">
-        <div className="w-full overflow-x-auto px-4">
+      <div className="flex-1 sheet-music-dark mx-6 rounded-sm overflow-x-auto flex items-start pt-4">
+        <div className="w-full px-4">
           <ScoreRenderer
             score={score}
             cursorBeat={isPlaying ? currentBeat : undefined}
