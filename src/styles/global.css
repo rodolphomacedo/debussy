@@ -1,0 +1,203 @@
+@import "tailwindcss";
+
+/* ── Theme tokens ── */
+@theme {
+  --font-serif: "Playfair Display", serif;
+  --font-body: "Inter", sans-serif;
+  --font-elegant: "Cormorant Garamond", serif;
+
+  --color-gold: #D4AF37;
+  --color-gold-light: #F9E29C;
+  --color-gold-dark: #8E6D10;
+  --color-piano-black: #0F0F0F;
+  --color-piano-ivory: #FDFCF0;
+}
+
+/* ── Base ── */
+@layer base {
+  body {
+    @apply bg-piano-black text-piano-ivory font-elegant antialiased overflow-hidden;
+    background-image:
+      radial-gradient(circle at center, rgba(60, 60, 60, 0.4) 0%, rgba(15, 15, 15, 1) 100%);
+    background-attachment: fixed;
+  }
+
+  body::after {
+    content: '';
+    @apply fixed inset-0 pointer-events-none z-[100];
+    background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.4) 100%);
+  }
+}
+
+/* ── Gold text effects ── */
+.metallic-gold {
+  background: linear-gradient(to bottom, #F9E29C 0%, #D4AF37 45%, #A67C00 55%, #D4AF37 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.8));
+}
+
+.gold-glow {
+  text-shadow: 0 0 10px rgba(212,175,55,0.5), 0 0 20px rgba(212,175,55,0.3), 0 0 30px rgba(212,175,55,0.1);
+}
+
+/* ── Shine animation ── */
+@keyframes shine {
+  to { background-position: 200% center; }
+}
+
+.gold-shine {
+  background: linear-gradient(45deg, #8E6D10 0%, #D4AF37 25%, #F9E29C 50%, #D4AF37 75%, #8E6D10 100%);
+  background-size: 200% auto;
+  animation: shine 4s linear infinite;
+}
+
+/* ── Ornate panel ── */
+.ornate-panel {
+  @apply bg-black/80 backdrop-blur-md border-2 rounded-sm relative;
+  border-image: linear-gradient(to bottom, #F9E29C, #D4AF37, #8E6D10) 1;
+  box-shadow:
+    inset 0 0 30px rgba(0,0,0,0.9),
+    0 15px 35px rgba(0,0,0,0.7),
+    0 0 0 1px rgba(212,175,55,0.1);
+}
+
+.ornate-panel::before,
+.ornate-panel::after {
+  content: '❦';
+  @apply absolute text-gold/30 text-3xl pointer-events-none select-none;
+}
+.ornate-panel::before { @apply top-2 left-2; }
+.ornate-panel::after  { @apply bottom-2 right-2 rotate-180; }
+
+/* ── Ornate button ── */
+.ornate-button {
+  @apply relative px-10 py-4 bg-gradient-to-b from-black/60 to-black/80 text-gold-light font-serif text-xl transition-all duration-500 border-2 uppercase tracking-widest cursor-pointer;
+  border-image: linear-gradient(to right, #8E6D10, #F9E29C, #8E6D10) 1;
+  box-shadow:
+    0 6px 20px rgba(0,0,0,0.6),
+    inset 0 0 10px rgba(212,175,55,0.1);
+}
+
+.ornate-button:hover {
+  @apply from-gold/20 to-gold/5;
+  text-shadow: 0 0 15px rgba(249,226,156,0.9);
+  box-shadow:
+    0 8px 25px rgba(0,0,0,0.8),
+    inset 0 0 20px rgba(212,175,55,0.2);
+  transform: translateY(-2px);
+}
+
+.ornate-button:active {
+  @apply translate-y-[1px];
+  box-shadow: 0 2px 10px rgba(0,0,0,0.8);
+}
+
+.ornate-button::before,
+.ornate-button::after {
+  content: '❧';
+  @apply absolute top-1/2 -translate-y-1/2 text-gold/40 text-2xl transition-all duration-500 pointer-events-none select-none;
+}
+.ornate-button::before { @apply -left-10; }
+.ornate-button::after  { @apply -right-10 scale-x-[-1]; }
+.ornate-button:hover::before { @apply -left-12 opacity-100; }
+.ornate-button:hover::after  { @apply -right-12 opacity-100; }
+
+/* ── Card ── */
+.ornate-card {
+  @apply relative overflow-hidden rounded-sm border-4 border-[#1a1a1a] cursor-pointer;
+  background: linear-gradient(to bottom right, #2a2a2a, #0a0a0a);
+  box-shadow:
+    0 20px 50px rgba(0,0,0,0.9),
+    inset 0 0 0 2px rgba(212,175,55,0.3);
+}
+
+/* ── Piano keys ── */
+.piano-key-white {
+  @apply bg-gradient-to-b from-[#fff] via-[#fdfcf0] to-[#e0e0d0] border-x border-black/20 rounded-b-md;
+  box-shadow: 0 8px 15px rgba(0,0,0,0.4);
+  height: 100%;
+  transition: all 0.1s ease;
+}
+
+.piano-key-white:active,
+.piano-key-white.active {
+  @apply from-[#e0e0d0] to-[#c0c0b0] translate-y-[4px];
+  box-shadow: 0 2px 5px rgba(0,0,0,0.6);
+}
+
+.piano-key-black {
+  @apply bg-gradient-to-b from-[#444] via-[#111] to-[#000] rounded-b-sm z-10;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.7);
+  height: 65%;
+  width: 65%;
+  margin-left: -32.5%;
+  margin-right: -32.5%;
+  border: 1px solid #222;
+  transition: all 0.1s ease;
+}
+
+.piano-key-black:active,
+.piano-key-black.active {
+  @apply from-[#111] to-[#000] translate-y-[3px];
+  box-shadow: 0 3px 8px rgba(0,0,0,0.8);
+}
+
+/* ── Progress bar ── */
+.progress-bar-container {
+  @apply w-full max-w-md h-6 bg-black/60 rounded-full border-2 border-gold/20 relative overflow-visible;
+  box-shadow: inset 0 2px 10px rgba(0,0,0,0.8);
+}
+
+.progress-bar-fill {
+  @apply h-full rounded-full;
+  background: linear-gradient(to right, #8E6D10, #D4AF37, #F9E29C, #D4AF37, #8E6D10);
+  background-size: 200% 100%;
+  animation: shine 3s linear infinite;
+  box-shadow: 0 0 20px rgba(212,175,55,0.6);
+}
+
+/* ── Flourish decorators ── */
+.flourish-left  { @apply absolute -left-12 -top-4 text-gold text-4xl select-none pointer-events-none; }
+.flourish-right { @apply absolute -right-12 -top-4 text-gold text-4xl scale-x-[-1] select-none pointer-events-none; }
+
+/* ── Scrollbar ── */
+.custom-scrollbar::-webkit-scrollbar { width: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #D4AF37; border-radius: 10px; }
+
+/* ── Sheet music area ── */
+.sheet-music-area {
+  @apply bg-[#fdfcf0] relative overflow-hidden;
+  border: 6px solid #1a1a1a;
+  box-shadow: inset 0 0 50px rgba(0,0,0,0.1);
+}
+
+/* ── Leather texture overlay ── */
+.leather-texture {
+  @apply absolute inset-0 opacity-40 pointer-events-none;
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 2px,
+    rgba(40,30,20,0.03) 2px,
+    rgba(40,30,20,0.03) 4px
+  );
+}
+
+/* ── Corner flourishes ── */
+.corner-flourishes::before,
+.corner-flourishes::after {
+  content: '❦';
+  @apply absolute text-gold/20 text-2xl select-none pointer-events-none;
+}
+.corner-flourishes::before { @apply top-2 left-2; }
+.corner-flourishes::after  { @apply top-2 right-2; }
+
+/* ── Recording indicator pulse ── */
+@keyframes rec-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.4; }
+}
+.rec-pulse { animation: rec-pulse 1.5s ease-in-out infinite; }
