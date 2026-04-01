@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react'
+import { useCallback, useState } from 'react'
 import { isAudioReady, playNote, releaseNote } from '../lib/audioEngine'
 
 interface PianoKeyboardProps {
@@ -34,7 +34,6 @@ function isBlack(midi: number): boolean {
 /**
  * Black key horizontal offset relative to its preceding white key.
  * Values are fractions of white key width, matching real piano geometry.
- * Grouped by position within the octave.
  */
 function getBlackKeyOffset(midi: number): number {
   const semitone = midi % 12
@@ -52,7 +51,7 @@ function getBlackKeyOffset(midi: number): number {
  * Returns the note name for labeling C keys.
  */
 function getNoteLabel(midi: number): string | null {
-  if (midi % 12 !== 0 && midi !== 21) return null // Only label C keys (and A0)
+  if (midi % 12 !== 0 && midi !== 21) return null
   if (midi === 21) return 'A0'
   return `C${Math.floor(midi / 12) - 1}`
 }
@@ -66,35 +65,46 @@ export function PianoKeyboard({
 }: PianoKeyboardProps) {
   const activeSet = activeKeys instanceof Set ? activeKeys : new Set(activeKeys)
   const guideSet = guideKeys instanceof Set ? guideKeys : new Set(guideKeys)
-  const pressedByMouseRef = useRef<Set<number>>(new Set())
 
-  // Build the list of all MIDI notes in range
+  // Local state so mouse/touch presses trigger re-render and visual feedback
+  const [mousePressed, setMousePressed] = useState<Set<number>>(new Set())
+
   const allNotes = Array.from({ length: endNote - startNote + 1 }, (_, i) => i + startNote)
   const whiteNotes = allNotes.filter(n => !isBlack(n))
   const blackNotes = allNotes.filter(n => isBlack(n))
 
-  // Compute white key index for positioning black keys
   const whiteKeyIndex = new Map<number, number>()
   whiteNotes.forEach((note, idx) => { whiteKeyIndex.set(note, idx) })
 
   const handlePointerDown = useCallback((midi: number) => {
     if (!playable) return
-    pressedByMouseRef.current.add(midi)
+    setMousePressed(prev => {
+      const next = new Set(prev)
+      next.add(midi)
+      return next
+    })
     if (isAudioReady()) playNote(midi, 0.7)
   }, [playable])
 
   const handlePointerUp = useCallback((midi: number) => {
     if (!playable) return
-    pressedByMouseRef.current.delete(midi)
+    setMousePressed(prev => {
+      const next = new Set(prev)
+      next.delete(midi)
+      return next
+    })
     if (isAudioReady()) releaseNote(midi)
   }, [playable])
 
   const handlePointerLeave = useCallback((midi: number) => {
     if (!playable) return
-    if (pressedByMouseRef.current.has(midi)) {
-      pressedByMouseRef.current.delete(midi)
+    setMousePressed(prev => {
+      if (!prev.has(midi)) return prev
+      const next = new Set(prev)
+      next.delete(midi)
       if (isAudioReady()) releaseNote(midi)
-    }
+      return next
+    })
   }, [playable])
 
   const whiteKeyCount = whiteNotes.length
@@ -117,7 +127,7 @@ export function PianoKeyboard({
 
         {/* White keys */}
         {whiteNotes.map((midi, idx) => {
-          const isActive = activeSet.has(midi)
+          const isActive = activeSet.has(midi) || mousePressed.has(midi)
           const isGuide = guideSet.has(midi)
           const label = getNoteLabel(midi)
 
@@ -156,12 +166,11 @@ export function PianoKeyboard({
 
         {/* Black keys */}
         {blackNotes.map((midi) => {
-          // Find the white key just below this black key
           const prevWhite = midi - 1 - (isBlack(midi - 1) ? 1 : 0)
           const whiteIdx = whiteKeyIndex.get(prevWhite)
           if (whiteIdx === undefined) return null
 
-          const isActive = activeSet.has(midi)
+          const isActive = activeSet.has(midi) || mousePressed.has(midi)
           const isGuide = guideSet.has(midi)
           const offset = getBlackKeyOffset(midi)
           const leftPercent = ((whiteIdx + offset) / whiteKeyCount) * 100

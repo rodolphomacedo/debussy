@@ -1,9 +1,10 @@
 import { useCallback, useRef, useState } from 'react'
 import { motion } from 'motion/react'
-import { Mic, Square, RotateCcw } from 'lucide-react'
+import { Mic, Square, RotateCcw, ArrowLeft } from 'lucide-react'
 import { PianoKeyboard } from './PianoKeyboard'
 import { ScoreRenderer } from './ScoreRenderer'
 import { OrnateFrame } from './OrnateFrame'
+import { useAppStore } from '../store/useAppStore'
 import { quantizeDuration } from '../lib/quantize'
 import { midiToVexFlow } from '../lib/midiToNote'
 import type { ScoreData, MeasureData, NoteData } from '../lib/demoScore'
@@ -79,12 +80,141 @@ function buildScoreFromCapture(notes: RawNote[], bpm: number): ScoreData | null 
   }
 }
 
+function RotaryKnob({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
+  const knobRef = useRef<HTMLDivElement>(null)
+  const dragging = useRef(false)
+
+  const rotation = -135 + value * 270 // -135 to +135 degrees
+
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    e.preventDefault()
+    dragging.current = true
+    ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+  }, [])
+
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (!dragging.current || !knobRef.current) return
+    const rect = knobRef.current.getBoundingClientRect()
+    const centerY = rect.top + rect.height / 2
+    const delta = (centerY - e.clientY) / 80
+    onChange(Math.max(0, Math.min(1, value + delta * 0.05)))
+  }, [value, onChange])
+
+  const handlePointerUp = useCallback(() => {
+    dragging.current = false
+  }, [])
+
+  return (
+    <div className="flex flex-col items-center gap-1.5">
+      <div
+        ref={knobRef}
+        className="w-10 h-10 rounded-full cursor-grab active:cursor-grabbing relative"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        style={{
+          background: 'conic-gradient(from 210deg, #1a1408, #3d2e14, #2a1e0c, #1a1408)',
+          border: '2px solid rgba(180, 145, 45, 0.35)',
+          boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 2px 6px rgba(0,0,0,0.5)',
+        }}
+      >
+        {/* Indicator notch */}
+        <div
+          className="absolute top-[3px] left-1/2 w-[2px] h-3 rounded-full origin-bottom"
+          style={{
+            background: 'linear-gradient(to bottom, #d4af37, #8e6d10)',
+            transform: `translateX(-50%) rotate(${rotation}deg)`,
+            transformOrigin: '50% 250%',
+          }}
+        />
+        {/* Center dot */}
+        <div className="absolute inset-[6px] rounded-full bg-gradient-to-br from-[#2a2208] to-[#0e0c06] border border-gold/10" />
+      </div>
+      <span className="text-gold/35 text-[8px] uppercase tracking-[0.15em] font-serif">{label}</span>
+    </div>
+  )
+}
+
+function VerticalSlider({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
+  const trackRef = useRef<HTMLDivElement>(null)
+  const dragging = useRef(false)
+
+  const updateValue = useCallback((clientY: number) => {
+    if (!trackRef.current) return
+    const rect = trackRef.current.getBoundingClientRect()
+    const ratio = 1 - (clientY - rect.top) / rect.height
+    onChange(Math.max(0, Math.min(1, ratio)))
+  }, [onChange])
+
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    e.preventDefault()
+    dragging.current = true
+    ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+    updateValue(e.clientY)
+  }, [updateValue])
+
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (!dragging.current) return
+    updateValue(e.clientY)
+  }, [updateValue])
+
+  const handlePointerUp = useCallback(() => {
+    dragging.current = false
+  }, [])
+
+  return (
+    <div className="flex flex-col items-center gap-1.5">
+      <div
+        ref={trackRef}
+        className="w-3 h-20 rounded-full relative cursor-pointer"
+        style={{
+          background: 'linear-gradient(to bottom, #1a1408, #0e0b06)',
+          border: '1px solid rgba(180, 145, 45, 0.2)',
+          boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.7)',
+        }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+      >
+        {/* Fill */}
+        <div
+          className="absolute bottom-0 left-0 right-0 rounded-full"
+          style={{
+            height: `${value * 100}%`,
+            background: 'linear-gradient(to top, #8e6d10, #d4af37)',
+            opacity: 0.6,
+          }}
+        />
+        {/* Thumb */}
+        <div
+          className="absolute left-1/2 -translate-x-1/2 w-5 h-3 rounded-sm"
+          style={{
+            bottom: `calc(${value * 100}% - 6px)`,
+            background: 'linear-gradient(to bottom, #d4af37, #8e6d10)',
+            border: '1px solid rgba(255,225,100,0.3)',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.5)',
+          }}
+        />
+      </div>
+      <span className="text-gold/35 text-[8px] uppercase tracking-[0.15em] font-serif">{label}</span>
+    </div>
+  )
+}
+
 export function CaptureScreen({ pressedNotes, lastNoteOn, bpm, onBack }: CaptureScreenProps) {
   const [isRecording, setIsRecording] = useState(false)
   const [capturedScore, setCapturedScore] = useState<ScoreData | null>(null)
   const rawNotesRef = useRef<RawNote[]>([])
   const activeNotesRef = useRef<Map<number, RawNote>>(new Map())
   const lastProcessedRef = useRef<number>(0)
+
+  const pianoVolume = useAppStore(s => s.pianoVolume)
+  const setPianoVolume = useAppStore(s => s.setPianoVolume)
+  const sustainLock = useAppStore(s => s.sustainLock)
+  const setSustainLock = useAppStore(s => s.setSustainLock)
+
+  // Local knob states for reverb (decorative for now)
+  const [reverbAmount, setReverbAmount] = useState(0.3)
 
   if (lastNoteOn && isRecording && lastNoteOn.time !== lastProcessedRef.current) {
     lastProcessedRef.current = lastNoteOn.time
@@ -130,119 +260,138 @@ export function CaptureScreen({ pressedNotes, lastNoteOn, bpm, onBack }: Capture
     <div className="h-full flex flex-col bg-piano-black overflow-hidden relative">
       <OrnateFrame variant="full" className="absolute inset-0 pointer-events-none z-40" />
 
-      {/* Header — minimal with jewel recording indicator */}
-      <div className="flex items-center justify-between px-8 py-4 relative z-30">
-        <button onClick={onBack} className="flex items-center gap-3 group cursor-pointer">
-          <span className="text-3xl font-serif metallic-gold tracking-wider italic">
+      {/* Header */}
+      <div className="flex items-center justify-between px-8 py-3 relative z-30">
+        <div className="flex items-center gap-4">
+          <button onClick={onBack} className="flex items-center gap-2 text-gold/50 hover:text-gold transition-colors cursor-pointer group">
+            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+          </button>
+          <span className="text-2xl font-serif metallic-gold tracking-wider italic">
             Debussy
           </span>
-        </button>
+        </div>
 
         {/* Gemstone recording indicator */}
-        {isRecording && (
-          <div className="flex items-center gap-3">
-            <div className="gem-indicator active" />
-            <span className="text-red-400 text-xs font-serif uppercase tracking-[0.3em]">
-              Recording
-            </span>
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          {isRecording && (
+            <>
+              <div className="gem-indicator active" />
+              <span className="text-red-400 text-xs font-serif uppercase tracking-[0.3em]">
+                Recording
+              </span>
+            </>
+          )}
+        </div>
       </div>
 
-      {/* Sheet music area — dark background */}
-      <div className="flex-1 sheet-music-dark mx-6 rounded-sm flex flex-col">
-        {capturedScore ? (
-          <div className="overflow-x-auto flex-1 flex items-center px-4">
-            <ScoreRenderer score={capturedScore} darkMode />
-          </div>
-        ) : (
-          <div className="flex-1 flex flex-col justify-center gap-12 px-12">
-            {/* Empty staff lines (gold on dark) */}
-            {[1, 2].map(row => (
-              <div key={row} className="relative h-24 w-full">
-                <div className="space-y-[14px]">
-                  {[1, 2, 3, 4, 5].map(i => (
-                    <div key={i} className="h-[1px] w-full bg-gold/20" />
-                  ))}
-                </div>
-                <div className="absolute left-0 top-[-10px] text-5xl font-serif text-gold/40 select-none">
-                  {row === 1 ? '\u{1D11E}' : '\u{1D122}'}
-                </div>
-
-                {isRecording && (
-                  <div className="absolute inset-0 flex items-center px-20">
-                    <div className="flex gap-8">
-                      {Array.from({ length: Math.min(rawNotesRef.current.length, 8) }).map((_, i) => (
-                        <motion.div
-                          key={i}
-                          initial={{ scale: 0, opacity: 0, y: 20 }}
-                          animate={{ scale: 1, opacity: 1, y: 0 }}
-                          transition={{ delay: i * 0.1, type: 'spring' }}
-                        >
-                          <div className="w-6 h-4 rounded-full bg-gold/80 rotate-[-15deg]" />
-                          <div className="absolute right-0 bottom-1/2 w-[2px] h-12 bg-gold/60 origin-bottom" />
-                        </motion.div>
-                      ))}
-                    </div>
+      {/* Main content area — sheet music + right sidebar */}
+      <div className="flex-1 flex relative z-10 overflow-hidden">
+        {/* Sheet music area */}
+        <div className="flex-1 sheet-music-dark mx-4 ml-6 rounded-sm flex flex-col">
+          {capturedScore ? (
+            <div className="overflow-x-auto flex-1 flex items-center px-4">
+              <ScoreRenderer score={capturedScore} darkMode />
+            </div>
+          ) : (
+            <div className="flex-1 flex flex-col justify-center gap-10 px-10">
+              {[1, 2].map(row => (
+                <div key={row} className="relative h-20 w-full">
+                  <div className="space-y-[14px]">
+                    {[1, 2, 3, 4, 5].map(i => (
+                      <div key={i} className="h-[1px] w-full bg-gold/20" />
+                    ))}
                   </div>
-                )}
-              </div>
-            ))}
+                  <div className="absolute left-0 top-[-10px] text-5xl font-serif text-gold/40 select-none">
+                    {row === 1 ? '\u{1D11E}' : '\u{1D122}'}
+                  </div>
+
+                  {isRecording && (
+                    <div className="absolute inset-0 flex items-center px-20">
+                      <div className="flex gap-8">
+                        {Array.from({ length: Math.min(rawNotesRef.current.length, 8) }).map((_, i) => (
+                          <motion.div
+                            key={i}
+                            initial={{ scale: 0, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.1, type: 'spring' }}
+                          >
+                            <div className="w-6 h-4 rounded-full bg-gold/80 rotate-[-15deg]" />
+                            <div className="absolute right-0 bottom-1/2 w-[2px] h-12 bg-gold/60 origin-bottom" />
+                          </motion.div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Right sidebar — controls panel matching reference */}
+        <div className="w-20 flex flex-col items-center justify-between py-4 mr-4">
+          {/* Volume slider */}
+          <VerticalSlider label="Volume" value={pianoVolume} onChange={setPianoVolume} />
+
+          {/* Reverb knob */}
+          <RotaryKnob label="Reverb" value={reverbAmount} onChange={setReverbAmount} />
+
+          {/* Sustain lock toggle */}
+          <button
+            onClick={() => setSustainLock(!sustainLock)}
+            className="flex flex-col items-center gap-1 cursor-pointer group"
+          >
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center transition-all"
+              style={{
+                background: sustainLock
+                  ? 'linear-gradient(135deg, #d4af37, #8e6d10)'
+                  : 'linear-gradient(135deg, #2a2a2a, #0a0a0a)',
+                border: `2px solid ${sustainLock ? 'rgba(249,226,156,0.5)' : 'rgba(180,145,45,0.25)'}`,
+                boxShadow: sustainLock
+                  ? '0 0 10px rgba(212,175,55,0.3), inset 0 1px 2px rgba(255,225,100,0.3)'
+                  : 'inset 0 2px 4px rgba(0,0,0,0.5)',
+              }}
+            >
+              <span className="text-[10px] font-serif font-bold" style={{ color: sustainLock ? '#1a1408' : 'rgba(212,175,55,0.4)' }}>
+                S
+              </span>
+            </div>
+            <span className="text-gold/35 text-[7px] uppercase tracking-[0.12em] font-serif leading-tight text-center">
+              Sustain{'\n'}Lock
+            </span>
+          </button>
+
+          {/* Instrument label */}
+          <div className="text-center">
+            <span className="text-gold/25 text-[7px] uppercase tracking-[0.12em] font-serif block">Instrument</span>
+            <span className="text-gold/50 text-[8px] font-serif tracking-wider block mt-0.5">Grand</span>
+            <span className="text-gold/50 text-[8px] font-serif tracking-wider block">Piano</span>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Controls bar */}
-      <div className="flex items-center justify-between px-8 py-4 relative z-30">
-        {/* Main controls */}
-        <div className="flex items-center gap-4">
-          <button
-            onClick={handleToggleRecording}
-            className={`ornate-button flex items-center gap-3 px-8 py-3 text-base ${isRecording ? '!bg-gradient-to-b !from-[#3a1515] !to-[#1a0a0a] !text-red-400 !border-red-500/40' : ''}`}
-          >
-            {isRecording ? <Square size={16} className="fill-current" /> : <Mic size={16} />}
-            {isRecording ? 'Stop Recording' : 'Start/Stop Recording'}
-          </button>
+      <div className="flex items-center justify-center gap-5 px-8 py-3 relative z-30">
+        <button
+          onClick={handleToggleRecording}
+          className={`ornate-button flex items-center gap-3 px-8 py-2.5 text-sm ${isRecording ? '!bg-gradient-to-b !from-[#3a1515] !to-[#1a0a0a] !text-red-400 !border-red-500/40' : ''}`}
+        >
+          {isRecording ? <Square size={14} className="fill-current" /> : <Mic size={14} />}
+          {isRecording ? 'Stop Recording' : 'Start/Stop Recording'}
+        </button>
 
-          <button className="ornate-button-dark px-6 py-3 text-sm font-serif tracking-wider">
-            Quantize BPM
-          </button>
+        <button className="ornate-button-dark px-6 py-2.5 text-sm font-serif tracking-wider">
+          Quantize BPM
+        </button>
 
-          <button
-            onClick={handleClear}
-            className="ornate-button-dark px-6 py-3 text-sm font-serif tracking-wider flex items-center gap-2"
-          >
-            <RotateCcw size={14} />
-            Undo Last Note
-          </button>
-        </div>
-
-        {/* Right side: decorative knobs + instrument */}
-        <div className="flex items-center gap-6">
-          {/* Volume knob (decorative) */}
-          <div className="flex flex-col items-center gap-1">
-            <div className="w-8 h-8 rounded-full border-2 border-gold/30 bg-gradient-to-br from-[#2a2a2a] to-[#0a0a0a] relative">
-              <div className="absolute top-1 left-1/2 w-[1px] h-2 bg-gold/50 -translate-x-1/2" />
-            </div>
-            <span className="text-gold/30 text-[7px] uppercase tracking-wider">Vol</span>
-          </div>
-
-          {/* Reverb knob (decorative) */}
-          <div className="flex flex-col items-center gap-1">
-            <div className="w-8 h-8 rounded-full border-2 border-gold/30 bg-gradient-to-br from-[#2a2a2a] to-[#0a0a0a] relative">
-              <div className="absolute top-1 left-1/2 w-[1px] h-2 bg-gold/50 -translate-x-1/2 rotate-45" />
-            </div>
-            <span className="text-gold/30 text-[7px] uppercase tracking-wider">Rev</span>
-          </div>
-
-          <div className="h-8 w-px bg-gold/10" />
-
-          {/* Instrument selector */}
-          <div className="ornate-button-dark px-4 py-2 text-xs font-serif">
-            <span className="text-gold/30 text-[7px] uppercase tracking-wider block mb-0.5">Instrument</span>
-            <span className="text-gold/70 tracking-wider">Grand Piano</span>
-          </div>
-        </div>
+        <button
+          onClick={handleClear}
+          className="ornate-button-dark px-6 py-2.5 text-sm font-serif tracking-wider flex items-center gap-2"
+        >
+          <RotateCcw size={13} />
+          Undo Last Note
+        </button>
       </div>
 
       {/* Piano keyboard */}

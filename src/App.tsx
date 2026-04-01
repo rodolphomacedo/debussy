@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { LoadingScreen } from './components/LoadingScreen'
 import { HomeScreen } from './components/HomeScreen'
@@ -10,7 +10,7 @@ import { ConfigScreen } from './components/ConfigScreen'
 import { SettingsPanel } from './components/SettingsPanel'
 import { useMidi } from './hooks/useMidi'
 import { FUR_ELISE } from './lib/demoScore'
-import { isAudioReady, playNote, releaseNote } from './lib/audioEngine'
+import { isAudioReady, playNote, releaseNote, setSustain } from './lib/audioEngine'
 import { useAppStore, type Screen } from './store/useAppStore'
 import type { ScoreResult } from './lib/scorer'
 
@@ -30,6 +30,7 @@ function App() {
   const selectedScore = useAppStore(s => s.selectedScore)
 
   const [lastNoteOn, setLastNoteOn] = useState<NoteOnEvent | null>(null)
+  const sustainLock = useAppStore(s => s.sustainLock)
 
   const handleNoteOn = useCallback((note: number, velocity: number) => {
     if (isAudioReady()) playNote(note, velocity)
@@ -40,10 +41,24 @@ function App() {
     if (isAudioReady()) releaseNote(note)
   }, [])
 
-  const { devices, pressedNotes, isConnected } = useMidi({
+  const handleSustainChange = useCallback((active: boolean) => {
+    setSustain(active)
+  }, [])
+
+  const { devices, pressedNotes, pedals, isConnected } = useMidi({
     onNoteOn: handleNoteOn,
     onNoteOff: handleNoteOff,
+    onSustainChange: handleSustainChange,
   })
+
+  // Apply sustain lock — when enabled, sustain stays on regardless of pedal
+  useEffect(() => {
+    if (sustainLock) {
+      setSustain(true)
+    } else if (!pedals.sustain) {
+      setSustain(false)
+    }
+  }, [sustainLock, pedals.sustain])
 
   const deviceName = devices.length > 0 ? devices[0].name : null
 

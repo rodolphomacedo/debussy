@@ -18,6 +18,8 @@ export function SettingsPanel({ deviceName }: SettingsPanelProps) {
   const setSfxVolume = useAppStore(s => s.setSfxVolume)
   const keyboardOctaves = useAppStore(s => s.keyboardOctaves)
   const setKeyboardOctaves = useAppStore(s => s.setKeyboardOctaves)
+  const sustainLock = useAppStore(s => s.sustainLock)
+  const setSustainLock = useAppStore(s => s.setSustainLock)
 
   // Level dots for metronome volume
   const levelDots = 8
@@ -122,6 +124,22 @@ export function SettingsPanel({ deviceName }: SettingsPanelProps) {
                     </div>
                     <span className="text-gold/40 text-xs font-mono">Dark</span>
                   </div>
+                </div>
+
+                {/* Sustain Pedal Lock */}
+                <div className="flex items-center justify-between">
+                  <div className="flex flex-col">
+                    <label className="text-gold/50 font-serif text-sm tracking-wider">Sustain Lock</label>
+                    <span className="text-gold/25 text-[10px] font-serif italic">Keeps sustain pedal always on</span>
+                  </div>
+                  <button
+                    onClick={() => setSustainLock(!sustainLock)}
+                    className="cursor-pointer"
+                  >
+                    <div className={`toggle-switch ${sustainLock ? 'active' : ''}`}>
+                      <div className="toggle-knob" />
+                    </div>
+                  </button>
                 </div>
 
                 {/* Keyboard Octaves */}

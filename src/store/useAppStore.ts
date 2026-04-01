@@ -28,6 +28,7 @@ interface AppState {
   pianoVolume: number
   sfxVolume: number
   keyboardOctaves: number
+  sustainLock: boolean
 
   setScreen: (screen: Screen) => void
   setMode: (mode: 'practice' | 'capture') => void
@@ -46,6 +47,7 @@ interface AppState {
   setPianoVolume: (vol: number) => void
   setSfxVolume: (vol: number) => void
   setKeyboardOctaves: (octaves: number) => void
+  setSustainLock: (on: boolean) => void
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -65,6 +67,7 @@ export const useAppStore = create<AppState>((set) => ({
   pianoVolume: 0.8,
   sfxVolume: 0.5,
   keyboardOctaves: 3,
+  sustainLock: false,
 
   setScreen: (screen) => set({ screen }),
   setMode: (mode) => set({ mode }),
@@ -84,4 +87,5 @@ export const useAppStore = create<AppState>((set) => ({
   setPianoVolume: (vol) => set({ pianoVolume: vol }),
   setSfxVolume: (vol) => set({ sfxVolume: vol }),
   setKeyboardOctaves: (octaves) => set({ keyboardOctaves: octaves }),
+  setSustainLock: (on) => set({ sustainLock: on }),
 }))

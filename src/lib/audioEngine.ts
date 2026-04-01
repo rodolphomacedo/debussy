@@ -44,6 +44,11 @@ const SALAMANDER_URLS: Record<string, string> = {
 let piano: Tone.Sampler | null = null
 let audioReady = false
 
+// ── Sustain pedal state ──
+// When sustain is active, released keys are held until pedal lifts
+let sustainActive = false
+const sustainedNotes = new Set<number>()
+
 /**
  * Initialize the audio engine. Must be called inside a user gesture handler
  * (click, keydown) due to browser autoplay policy.
@@ -90,16 +95,52 @@ export function midiToToneNote(midi: number): string {
 export function playNote(midiNumber: number, velocity = 0.8): void {
   if (!piano || !audioReady) return
   const note = midiToToneNote(midiNumber)
+  sustainedNotes.delete(midiNumber)
   piano.triggerAttack(note, Tone.now(), velocity)
 }
 
 /**
  * Release a piano note by MIDI number.
+ * If sustain pedal is active, the note is held until the pedal lifts.
  */
 export function releaseNote(midiNumber: number): void {
   if (!piano || !audioReady) return
+  if (sustainActive) {
+    sustainedNotes.add(midiNumber)
+    return
+  }
   const note = midiToToneNote(midiNumber)
   piano.triggerRelease(note, Tone.now())
+}
+
+/**
+ * Set the sustain pedal state.
+ * When released (false), all held notes are released.
+ */
+export function setSustain(active: boolean): void {
+  sustainActive = active
+  if (!active && piano && audioReady) {
+    for (const midi of sustainedNotes) {
+      const note = midiToToneNote(midi)
+      piano.triggerRelease(note, Tone.now())
+    }
+    sustainedNotes.clear()
+  }
+}
+
+/**
+ * Check if sustain is currently active.
+ */
+export function isSustainActive(): boolean {
+  return sustainActive
+}
+
+/**
+ * Apply soft pedal (una corda) — reduces velocity of subsequent notes.
+ * This is handled at the MIDI input level, not here.
+ */
+export function setSoftPedal(_active: boolean): void {
+  // Soft pedal effect is applied by reducing velocity at the input layer
 }
 
 /**
