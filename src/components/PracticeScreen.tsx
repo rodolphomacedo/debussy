@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion } from 'motion/react'
-import { Play, Pause, RotateCcw } from 'lucide-react'
+import { Play, Pause, RotateCcw, ArrowLeft } from 'lucide-react'
 import { PianoKeyboard } from './PianoKeyboard'
 import { ScoreRenderer } from './ScoreRenderer'
 import { OrnateFrame } from './OrnateFrame'
@@ -131,15 +131,18 @@ export function PracticeScreen({
     <div className="h-full flex flex-col bg-piano-black overflow-hidden relative">
       <OrnateFrame variant="full" className="absolute inset-0 pointer-events-none z-40" />
 
-      {/* Top bar — minimal branding */}
-      <div className="flex items-center justify-between px-8 py-4 relative z-30">
+      {/* Top bar */}
+      <div className="flex items-center justify-between px-6 py-3 relative z-30">
         <div className="flex items-center gap-4">
-          <span className="text-3xl font-serif metallic-gold tracking-wider italic">
-            Debussy
-          </span>
-          <span className="text-gold/30 font-serif italic text-xs tracking-widest">
-            Impressionist Piano Learning
-          </span>
+          <button
+            onClick={onBack}
+            className="flex items-center gap-2 text-gold/50 hover:text-gold transition-colors group cursor-pointer"
+          >
+            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+            <span className="font-serif text-sm tracking-wider">Home</span>
+          </button>
+          <span className="text-gold/15">|</span>
+          <span className="text-2xl font-serif metallic-gold tracking-wider italic">Debussy</span>
         </div>
         <div className="flex items-center gap-3 text-gold/40 text-xs font-serif italic tracking-wider">
           <span>{score.title}</span>
@@ -176,13 +179,8 @@ export function PracticeScreen({
 
       {/* Controls bar below sheet music */}
       <div className="flex items-center justify-between px-12 py-4 relative z-30">
-        {/* Left: lyre + back */}
-        <button
-          onClick={onBack}
-          className="flex items-center gap-3 text-gold/50 hover:text-gold transition-colors group cursor-pointer"
-        >
-          <LyreIcon size={36} className="group-hover:scale-110 transition-transform" />
-        </button>
+        {/* Left: lyre decoration */}
+        <LyreIcon size={32} className="text-gold/25" />
 
         {/* Center: play button + score */}
         <div className="flex items-center gap-8">

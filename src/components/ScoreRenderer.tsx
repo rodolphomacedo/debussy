@@ -155,20 +155,36 @@ export function ScoreRenderer({
       x += width
     }
 
-    // After VexFlow renders, apply dark mode to SVG elements for staves/connectors
+    // After VexFlow renders, apply dark mode — recolor all black SVG elements to gold.
+    // VexFlow can emit stroke/fill as '#000000', 'black', 'rgb(0,0,0)', or unset (inherited).
     if (darkMode) {
       const svgEl = container.querySelector('svg')
       if (svgEl) {
-        // Color all staff lines and connectors
-        svgEl.querySelectorAll('line, path, rect').forEach(el => {
+        const isBlackColor = (v: string | null) =>
+          !v || v === '' || v === '#000000' || v === 'black' || v === '#000' ||
+          v === 'rgb(0, 0, 0)' || v === 'rgb(0,0,0)'
+
+        svgEl.querySelectorAll('path, line, rect, circle, polygon, polyline').forEach(el => {
           const stroke = el.getAttribute('stroke')
           const fill = el.getAttribute('fill')
-          // Recolor black strokes to gold
-          if (stroke === '#000000' || stroke === 'black' || stroke === '#000') {
+
+          // Notes and beams already colored per-note above — skip if already set to
+          // hit/miss colors so we don't overwrite them
+          const isHitMiss = (v: string | null) =>
+            v === HIT_COLOR || v === MISS_COLOR
+
+          if (!isHitMiss(stroke) && isBlackColor(stroke)) {
             el.setAttribute('stroke', DARK_STAFF_COLOR)
           }
-          // Recolor black fills (but not 'none')
-          if (fill === '#000000' || fill === 'black' || fill === '#000') {
+          if (!isHitMiss(fill) && fill !== 'none' && isBlackColor(fill)) {
+            el.setAttribute('fill', DARK_NOTE_COLOR)
+          }
+        })
+
+        // Also handle text elements (accidentals, clef numbers, etc.)
+        svgEl.querySelectorAll('text').forEach(el => {
+          const fill = el.getAttribute('fill')
+          if (!fill || fill === '#000000' || fill === 'black' || fill === '#000') {
             el.setAttribute('fill', DARK_NOTE_COLOR)
           }
         })
