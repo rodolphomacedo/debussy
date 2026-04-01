@@ -43,31 +43,56 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
   }, [onComplete])
 
   return (
-    <div className="fixed inset-0 flex flex-col items-center justify-center bg-piano-black overflow-hidden z-50">
-      {/* Corner flourishes */}
-      <div className="absolute top-8 left-8 text-gold/20 text-6xl select-none">❦</div>
-      <div className="absolute top-8 right-8 text-gold/20 text-6xl select-none scale-x-[-1]">❦</div>
-      <div className="absolute bottom-8 left-8 text-gold/20 text-6xl select-none scale-y-[-1]">❦</div>
-      <div className="absolute bottom-8 right-8 text-gold/20 text-6xl select-none scale-x-[-1] scale-y-[-1]">❦</div>
-
+    <div className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden z-50 velvet-bg">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1.5, ease: 'easeOut' }}
         className="flex flex-col items-center z-10"
       >
-        <h1 className="text-8xl font-serif metallic-gold gold-glow mb-2 tracking-widest uppercase">
-          DEBUSSY
+        {/* Title — mixed case, calligraphic feel */}
+        <h1 className="text-8xl font-serif metallic-gold gold-glow mb-4 tracking-wide">
+          Debussy
         </h1>
 
-        <div className="flex items-center gap-4 mb-16">
-          <div className="h-[1px] w-24 bg-gradient-to-r from-transparent to-gold" />
-          <span className="text-gold text-2xl">❦</span>
-          <div className="h-[1px] w-24 bg-gradient-to-l from-transparent to-gold" />
-        </div>
+        {/* Subtitle */}
+        <p className="text-gold/50 font-serif italic text-lg tracking-widest mb-16">
+          Harmonizing tradition with innovation
+        </p>
 
-        <div className="flex flex-col items-center gap-8">
-          <div className="relative">
+        <div className="flex flex-col items-center gap-6">
+          {/* Start button — appears early, gold-filled */}
+          {progress === 100 && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleStart}
+              disabled={audioLoading}
+              className="ornate-button mb-6"
+            >
+              {audioLoading ? 'Loading Sounds...' : 'Start Playing'}
+            </motion.button>
+          )}
+
+          {/* Status messages */}
+          <div className="h-12 flex flex-col items-center justify-center gap-1">
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={statusIndex}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                className="text-gold/50 font-serif italic text-base"
+              >
+                {STATUSES[statusIndex]}
+              </motion.p>
+            </AnimatePresence>
+          </div>
+
+          {/* Progress bar — slim with flourishes */}
+          <div className="relative mt-2">
             <span className="flourish-left">❧</span>
             <div className="progress-bar-container">
               <motion.div
@@ -78,38 +103,12 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
               />
             </div>
             <span className="flourish-right">❧</span>
-            <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-gold-light font-serif italic text-lg">
-              {progress}%
-            </div>
           </div>
 
-          <div className="h-8 flex items-center justify-center">
-            <AnimatePresence mode="wait">
-              <motion.p
-                key={statusIndex}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="text-gold/60 font-serif italic text-xl"
-              >
-                {STATUSES[statusIndex]}
-              </motion.p>
-            </AnimatePresence>
+          {/* Percentage below */}
+          <div className="text-gold/40 font-serif italic text-sm">
+            {progress}%
           </div>
-
-          {progress === 100 && (
-            <motion.button
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleStart}
-              disabled={audioLoading}
-              className="ornate-button mt-8"
-            >
-              {audioLoading ? 'LOADING SOUNDS...' : 'START PLAYING'}
-            </motion.button>
-          )}
         </div>
       </motion.div>
     </div>

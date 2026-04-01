@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion } from 'motion/react'
-import { Play, Pause, RotateCcw, ChevronLeft } from 'lucide-react'
+import { Play, Pause, RotateCcw } from 'lucide-react'
 import { PianoKeyboard } from './PianoKeyboard'
 import { ScoreRenderer } from './ScoreRenderer'
+import { OrnateFrame } from './OrnateFrame'
+import { LyreIcon } from './icons/LyreIcon'
 import { usePlayback } from '../hooks/usePlayback'
 import {
   evaluatePerformance,
@@ -90,7 +92,6 @@ export function PracticeScreen({
     score, bpm, onExpectedNote: handleExpectedNote, onComplete: handleComplete,
   })
 
-  // Record MIDI notes
   useEffect(() => {
     if (!lastNoteOn || !isPlayingRef.current) return
     const timestamp = performance.now() - startTimeRef.current
@@ -128,80 +129,43 @@ export function PracticeScreen({
 
   return (
     <div className="h-full flex flex-col bg-piano-black overflow-hidden relative">
-      {/* Top bar */}
-      <div className="flex items-center justify-between p-6 bg-gradient-to-b from-[#2a2a2a] via-[#1a1a1a] to-[#0a0a0a] border-b-4 border-gold/30 shadow-[0_10px_40px_rgba(0,0,0,0.9)] relative z-30 corner-flourishes">
-        <div className="leather-texture" />
+      <OrnateFrame variant="full" className="absolute inset-0 pointer-events-none z-40" />
 
-        <div className="flex items-center gap-6 relative z-10">
-          <button
-            onClick={onBack}
-            className="w-12 h-12 rounded-full bg-black/60 border-2 border-gold/30 flex items-center justify-center text-gold/60 hover:text-gold hover:border-gold transition-all"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </button>
-          <div className="flex flex-col">
-            <h2 className="text-2xl font-serif metallic-gold tracking-[0.15em] leading-none mb-1">
-              {score.title.toUpperCase()}
-            </h2>
-            <div className="flex items-center gap-3">
-              <span className="text-gold/40 text-[10px] uppercase tracking-[0.3em] font-serif italic">{score.composer}</span>
-              <div className="w-1 h-1 rounded-full bg-gold/20" />
-              <span className="text-gold/40 text-[10px] uppercase tracking-[0.3em] font-serif">{bpm} BPM</span>
-            </div>
-          </div>
+      {/* Top bar — minimal branding */}
+      <div className="flex items-center justify-between px-8 py-4 relative z-30">
+        <div className="flex items-center gap-4">
+          <span className="text-3xl font-serif metallic-gold tracking-wider italic">
+            Debussy
+          </span>
+          <span className="text-gold/30 font-serif italic text-xs tracking-widest">
+            Impressionist Piano Learning
+          </span>
         </div>
-
-        <div className="flex items-center gap-10 relative z-10">
-          {/* Stats */}
-          <div className="flex gap-8 bg-black/40 px-6 py-2 rounded-xl border border-gold/10 shadow-inner">
-            <div className="text-center">
-              <div className="text-2xl font-serif text-green-500 leading-none">{stats.correct}</div>
-              <div className="text-[9px] text-gold/30 uppercase tracking-[0.25em] mt-1">Correct</div>
-            </div>
-            <div className="w-px h-8 bg-gold/10 self-center" />
-            <div className="text-center">
-              <div className="text-2xl font-serif text-red-500 leading-none">{stats.wrong}</div>
-              <div className="text-[9px] text-gold/30 uppercase tracking-[0.25em] mt-1">Wrong</div>
-            </div>
-          </div>
-
-          {/* Controls */}
-          <div className="flex items-center gap-4">
-            <button
-              onClick={isPlaying ? () => { stop(); isPlayingRef.current = false } : handleStart}
-              className="w-14 h-14 rounded-full bg-gradient-to-br from-[#d4af37] via-[#f9e29c] to-[#b8860b] p-[2px] shadow-[0_5px_20px_rgba(0,0,0,0.6)] active:translate-y-1 transition-all group"
-            >
-              <div className="w-full h-full rounded-full bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a] flex items-center justify-center text-gold group-hover:text-white transition-colors">
-                {isPlaying
-                  ? <Pause className="w-7 h-7 fill-current" />
-                  : <Play className="w-7 h-7 fill-current ml-1" />}
-              </div>
-            </button>
-            <button
-              onClick={handleReset}
-              className="w-10 h-10 rounded-full bg-black/60 border-2 border-gold/30 flex items-center justify-center text-gold/60 hover:text-gold hover:border-gold transition-all"
-            >
-              <RotateCcw className="w-5 h-5" />
-            </button>
-          </div>
+        <div className="flex items-center gap-3 text-gold/40 text-xs font-serif italic tracking-wider">
+          <span>{score.title}</span>
+          <span className="text-gold/20">·</span>
+          <span>{score.composer}</span>
+          <span className="text-gold/20">·</span>
+          <span>{bpm} BPM</span>
         </div>
       </div>
 
-      {/* Sheet music area */}
-      <div className="flex-1 sheet-music-area flex items-center justify-center">
+      {/* Sheet music area — dark background */}
+      <div className="flex-1 sheet-music-dark flex items-center justify-center mx-6 rounded-sm">
         <div className="w-full overflow-x-auto px-4">
           <ScoreRenderer
             score={score}
             cursorBeat={isPlaying ? currentBeat : undefined}
             hitNotes={hitNotes.size > 0 ? hitNotes : undefined}
             missNotes={missNotes.size > 0 ? missNotes : undefined}
+            darkMode
           />
         </div>
       </div>
 
       {/* Progress bar */}
       {isPlaying && (
-        <div className="h-1 bg-black/60">
+        <div className="h-1 mx-6 bg-black/60">
           <motion.div
             className="h-full gold-shine"
             style={{ width: `${progress * 100}%` }}
@@ -210,17 +174,49 @@ export function PracticeScreen({
         </div>
       )}
 
+      {/* Controls bar below sheet music */}
+      <div className="flex items-center justify-between px-12 py-4 relative z-30">
+        {/* Left: lyre + back */}
+        <button
+          onClick={onBack}
+          className="flex items-center gap-3 text-gold/50 hover:text-gold transition-colors group cursor-pointer"
+        >
+          <LyreIcon size={36} className="group-hover:scale-110 transition-transform" />
+        </button>
+
+        {/* Center: play button + score */}
+        <div className="flex items-center gap-8">
+          <button
+            onClick={isPlaying ? () => { stop(); isPlayingRef.current = false } : handleStart}
+            className="w-16 h-16 rounded-full bg-gradient-to-br from-[#d4af37] via-[#f9e29c] to-[#b8860b] p-[2px] shadow-[0_5px_20px_rgba(0,0,0,0.6)] active:translate-y-1 transition-all group cursor-pointer"
+          >
+            <div className="w-full h-full rounded-full bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a] flex items-center justify-center text-gold group-hover:text-white transition-colors">
+              {isPlaying
+                ? <Pause className="w-8 h-8 fill-current" />
+                : <Play className="w-8 h-8 fill-current ml-1" />}
+            </div>
+          </button>
+
+          <div className="flex items-center gap-4 text-lg font-serif">
+            <span className="text-green-500">✓ {stats.correct}</span>
+            <span className="text-gold/20">·</span>
+            <span className="text-red-500">✗ {stats.wrong}</span>
+          </div>
+        </div>
+
+        {/* Right: reset */}
+        <button
+          onClick={handleReset}
+          className="ornate-button-dark px-6 py-2 text-sm flex items-center gap-2 cursor-pointer"
+        >
+          <RotateCcw className="w-4 h-4" />
+          <span className="font-serif tracking-wider">Reset</span>
+        </button>
+      </div>
+
       {/* Piano keyboard */}
-      <div className="h-52 bg-gradient-to-t from-[#1a1a1a] via-[#0a0a0a] to-[#2a2a2a] pt-8 border-t-4 border-gold/30 relative shadow-[0_-15px_50px_rgba(0,0,0,0.9)] z-20">
-        <div className="leather-texture" />
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-4 opacity-30">
-          <div className="w-24 h-[1px] bg-gradient-to-r from-transparent to-gold" />
-          <span className="text-gold font-serif italic text-xs tracking-[0.5em]">DEBUSSY</span>
-          <div className="w-24 h-[1px] bg-gradient-to-l from-transparent to-gold" />
-        </div>
-        <div className="relative z-10 h-full px-4">
-          <PianoKeyboard activeKeys={pressedNotes} />
-        </div>
+      <div className="h-52 relative z-20">
+        <PianoKeyboard activeKeys={pressedNotes} />
       </div>
     </div>
   )

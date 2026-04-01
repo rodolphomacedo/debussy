@@ -1,5 +1,8 @@
 import { motion } from 'motion/react'
-import { RotateCcw, Home, Award } from 'lucide-react'
+import { RotateCcw, Home, Settings2 } from 'lucide-react'
+import { NavBar } from './NavBar'
+import { GoldenRosesIcon } from './icons/GoldenRosesIcon'
+import { useAppStore, type Screen } from '../store/useAppStore'
 import type { ScoreResult } from '../lib/scorer'
 
 interface ResultsScreenProps {
@@ -8,118 +11,212 @@ interface ResultsScreenProps {
   onRetry: () => void
 }
 
+function getDetailText(label: string, value: number | string): string {
+  if (label === 'Accuracy Percentage') {
+    const pct = typeof value === 'string' ? parseInt(value) : value
+    if (pct >= 95) return 'Exceptional Performance'
+    if (pct >= 85) return 'Very Good Performance'
+    if (pct >= 70) return 'Solid Performance'
+    return 'Needs Improvement'
+  }
+  if (label === 'Perfect Hits') return 'Rhythm & Pitch on Point'
+  if (label === 'Partial Hits') return 'Slight Timing Variations'
+  if (label === 'Errors') return 'Missed Notes'
+  return ''
+}
+
 export function ResultsScreen({ result, onHome, onRetry }: ResultsScreenProps) {
-  const avgTiming = result.timingErrors.length > 0
-    ? Math.round(result.timingErrors.reduce((a, b) => a + b, 0) / result.timingErrors.length)
-    : 0
+  const setSettingsOpen = useAppStore(s => s.setSettingsOpen)
+  const setScreen = useAppStore(s => s.setScreen)
+
+  const navigate = (screen: Screen) => setScreen(screen)
+
+  // Performance consistency mock data (split timing errors into 5 sections)
+  const sections = ['Intro', 'Verse 1', 'Chorus', 'Bridge', 'Outro']
+  const sectionScores: number[] = []
+  if (result.timingErrors.length > 0) {
+    const chunkSize = Math.ceil(result.timingErrors.length / 5)
+    for (let i = 0; i < 5; i++) {
+      const chunk = result.timingErrors.slice(i * chunkSize, (i + 1) * chunkSize)
+      const avg = chunk.length > 0
+        ? Math.max(0, 100 - (chunk.reduce((a, b) => a + b, 0) / chunk.length) / 3)
+        : result.percentScore
+      sectionScores.push(Math.round(avg))
+    }
+  } else {
+    for (let i = 0; i < 5; i++) sectionScores.push(result.percentScore)
+  }
+
+  // SVG polyline points for performance chart
+  const chartWidth = 500
+  const chartHeight = 80
+  const points = sectionScores.map((score, i) => {
+    const x = (i / (sectionScores.length - 1)) * chartWidth
+    const y = chartHeight - (score / 100) * chartHeight
+    return `${x},${y}`
+  }).join(' ')
+
+  const statsRows = [
+    { label: 'Accuracy Percentage', value: `${result.percentScore}%` },
+    { label: 'Perfect Hits', value: String(result.hits) },
+    { label: 'Partial Hits', value: String(Math.max(0, result.hits - result.misses)) },
+    { label: 'Errors', value: String(result.misses) },
+  ]
 
   return (
-    <div className="h-full flex flex-col items-center justify-center p-8 overflow-hidden relative">
+    <div className="h-full flex flex-col overflow-hidden relative">
       <div className="leather-texture" />
 
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-5xl p-12 flex flex-col items-center gap-10 ornate-card"
-      >
-        <div className="leather-texture" />
-        <div className="absolute top-6 left-6 text-gold/30 text-4xl select-none pointer-events-none">❦</div>
-        <div className="absolute top-6 right-6 text-gold/30 text-4xl select-none pointer-events-none">❦</div>
-        <div className="absolute bottom-6 left-6 text-gold/30 text-4xl select-none pointer-events-none rotate-180">❦</div>
-        <div className="absolute bottom-6 right-6 text-gold/30 text-4xl select-none pointer-events-none rotate-180">❦</div>
+      {/* Golden roses decoration (right side) */}
+      <div className="absolute right-0 top-0 bottom-0 w-80 pointer-events-none z-0 opacity-60">
+        <GoldenRosesIcon className="w-full h-full text-gold" />
+      </div>
 
-        {/* Header */}
-        <header className="text-center relative z-10">
-          <motion.div
-            initial={{ scale: 0.5, opacity: 0, rotate: -180 }}
-            animate={{ scale: 1, opacity: 1, rotate: 0 }}
-            transition={{ duration: 1, type: 'spring' }}
-            className="inline-block mb-4"
-          >
-            <div className="w-20 h-20 rounded-full bg-black/60 border-2 border-gold/50 flex items-center justify-center shadow-[0_0_30px_rgba(212,175,55,0.4)]">
-              <Award className="w-10 h-10 text-gold" />
-            </div>
-          </motion.div>
-          <h1 className="text-4xl font-serif metallic-gold uppercase tracking-[0.3em] mb-2">SESSION COMPLETE</h1>
-          <div className="flex items-center justify-center gap-4">
-            <div className="h-[1px] w-16 bg-gradient-to-r from-transparent to-gold/50" />
-            <span className="text-gold text-lg">❦</span>
-            <div className="h-[1px] w-16 bg-gradient-to-l from-transparent to-gold/50" />
+      {/* NavBar */}
+      <NavBar
+        currentScreen="results"
+        onNavigate={navigate}
+        isConnected={false}
+        deviceName={null}
+        onSettingsOpen={() => setSettingsOpen(true)}
+      />
+
+      {/* Main content */}
+      <div className="flex-1 flex flex-col items-start px-12 py-8 relative z-10 overflow-y-auto custom-scrollbar max-w-4xl">
+        {/* Grade circle */}
+        <motion.div
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.8, type: 'spring' }}
+          className="flex items-center justify-center mx-auto mb-8"
+        >
+          <div className="w-28 h-28 rounded-full bg-gradient-to-br from-black/80 to-black/95 border-4 border-gold/50 flex items-center justify-center shadow-[0_10px_40px_rgba(0,0,0,0.8),0_0_30px_rgba(212,175,55,0.2)]">
+            <span className="text-6xl font-elegant metallic-gold italic">{result.grade}</span>
           </div>
-        </header>
+        </motion.div>
 
-        {/* Grade + stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 w-full relative z-10">
-          {/* Grade circle */}
-          <div className="flex flex-col items-center justify-center p-8 bg-gradient-to-br from-black/80 to-black/95 rounded-full border-4 border-gold/40 aspect-square shadow-[0_20px_50px_rgba(0,0,0,0.9),inset_0_0_40px_rgba(212,175,55,0.15)]">
-            <span className="text-xs text-gold/40 uppercase tracking-[0.4em] mb-2 font-elegant">Grade</span>
-            <span className={`text-8xl font-serif metallic-gold`}>{result.grade}</span>
+        {/* Session Statistics heading */}
+        <div className="w-full mb-6">
+          <h2 className="text-2xl font-serif metallic-gold tracking-wider text-center mb-2">
+            Session Statistics
+          </h2>
+          <div className="flex items-center justify-center gap-3">
+            <div className="h-[1px] w-20 bg-gradient-to-r from-transparent to-gold/40" />
+            <span className="text-gold/30 text-sm">❦</span>
+            <div className="h-[1px] w-20 bg-gradient-to-l from-transparent to-gold/40" />
           </div>
+        </div>
 
-          {/* Stats list */}
-          <div className="flex flex-col justify-center gap-6">
-            {[
-              { label: 'Accuracy', value: `${result.percentScore}%`, color: 'text-gold-light' },
-              { label: 'Perfect Hits', value: result.hits, color: 'text-green-400' },
-              { label: 'Misses', value: result.misses, color: 'text-red-400' },
-              { label: 'Extra Notes', value: result.extras, color: 'text-amber-500' },
-              { label: 'Avg. Timing', value: `${avgTiming}ms`, color: 'text-gold-light' },
-            ].map((item, i) => (
-              <motion.div
+        {/* Stats table */}
+        <motion.table
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="w-full border-collapse mb-8"
+        >
+          <thead>
+            <tr className="border-b-2 border-gold/30">
+              <th className="text-left py-2 text-gold/60 font-serif italic text-sm tracking-wider">Metric</th>
+              <th className="text-center py-2 text-gold/60 font-serif italic text-sm tracking-wider">Result</th>
+              <th className="text-right py-2 text-gold/60 font-serif italic text-sm tracking-wider">Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            {statsRows.map((row, i) => (
+              <motion.tr
                 key={i}
-                initial={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 0, x: -15 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 + i * 0.1 }}
-                className="flex justify-between items-end border-b-2 border-gold/20 pb-3"
+                transition={{ delay: 0.4 + i * 0.1 }}
+                className="border-b border-gold/10"
               >
-                <span className="text-gold/60 font-serif italic text-lg tracking-widest">{item.label}</span>
-                <span className={`${item.color} font-serif text-2xl`}>{item.value}</span>
-              </motion.div>
+                <td className="py-3 text-gold/70 font-serif">{row.label}</td>
+                <td className="py-3 text-gold-light font-serif text-center text-lg">{row.value}</td>
+                <td className="py-3 text-gold/40 font-serif italic text-sm text-right">{getDetailText(row.label, row.value)}</td>
+              </motion.tr>
             ))}
-          </div>
+          </tbody>
+        </motion.table>
 
-          {/* Accuracy ring */}
-          <div className="flex flex-col items-center justify-center">
-            <div className="relative w-48 h-48">
-              <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(212,175,55,0.1)" strokeWidth="8" />
-                <motion.circle
-                  cx="50" cy="50" r="45" fill="none"
-                  stroke="url(#goldGrad)" strokeWidth="8"
-                  strokeDasharray="283"
-                  initial={{ strokeDashoffset: 283 }}
-                  animate={{ strokeDashoffset: 283 - (283 * result.percentScore) / 100 }}
-                  transition={{ duration: 2, ease: 'easeOut', delay: 0.5 }}
-                  strokeLinecap="round"
+        {/* Performance Consistency chart */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          className="w-full mb-8"
+        >
+          <h3 className="text-lg font-serif metallic-gold tracking-wider mb-4">
+            Performance Consistency
+          </h3>
+          <div className="relative">
+            {/* Section labels */}
+            <div className="flex justify-between mb-1 text-gold/30 text-[10px] font-serif tracking-wider">
+              {sections.map(s => <span key={s}>{s}</span>)}
+            </div>
+            <svg width="100%" height={chartHeight + 10} viewBox={`0 0 ${chartWidth} ${chartHeight + 10}`} className="overflow-visible">
+              {/* Grid lines */}
+              {[0, 25, 50, 75, 100].map(pct => (
+                <line
+                  key={pct}
+                  x1="0" y1={chartHeight - (pct / 100) * chartHeight}
+                  x2={chartWidth} y2={chartHeight - (pct / 100) * chartHeight}
+                  stroke="rgba(212,175,55,0.1)" strokeWidth="1"
                 />
-                <defs>
-                  <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#FDE08B" />
-                    <stop offset="50%" stopColor="#D4AF37" />
-                    <stop offset="100%" stopColor="#AA7C11" />
-                  </linearGradient>
-                </defs>
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-4xl font-serif metallic-gold">{result.percentScore}%</span>
-                <span className="text-[10px] text-gold/40 uppercase tracking-[0.4em] mt-2 font-elegant">Accuracy</span>
-              </div>
+              ))}
+              {/* Performance line */}
+              <polyline
+                points={points}
+                fill="none"
+                stroke="url(#chartGold)"
+                strokeWidth="2"
+                strokeLinejoin="round"
+              />
+              {/* Dots at each point */}
+              {sectionScores.map((score, i) => (
+                <circle
+                  key={i}
+                  cx={(i / (sectionScores.length - 1)) * chartWidth}
+                  cy={chartHeight - (score / 100) * chartHeight}
+                  r="4"
+                  fill="#D4AF37"
+                  opacity="0.8"
+                />
+              ))}
+              <defs>
+                <linearGradient id="chartGold" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#8E6D10" />
+                  <stop offset="50%" stopColor="#D4AF37" />
+                  <stop offset="100%" stopColor="#F9E29C" />
+                </linearGradient>
+              </defs>
+            </svg>
+            {/* Time markers */}
+            <div className="flex justify-between mt-1 text-gold/20 text-[9px] font-mono">
+              <span>0:00</span>
+              <span>1:30</span>
+              <span>3:00</span>
+              <span>4:45</span>
+              <span>6:12</span>
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Actions */}
-        <div className="flex gap-8 w-full max-w-3xl mt-6 relative z-10">
-          <button onClick={onRetry} className="flex-1 ornate-button flex items-center justify-center gap-3 group py-5 text-lg tracking-[0.2em]">
-            <RotateCcw className="w-6 h-6 group-hover:-rotate-180 transition-transform duration-700" />
-            RETRY
+        {/* Action buttons */}
+        <div className="flex gap-6 w-full">
+          <button onClick={onRetry} className="flex-1 ornate-button flex items-center justify-center gap-3 py-4 text-base tracking-[0.15em]">
+            <RotateCcw className="w-5 h-5" />
+            Try Again
           </button>
-          <button onClick={onHome} className="flex-1 ornate-button flex items-center justify-center gap-3 group py-5 text-lg tracking-[0.2em]">
-            <Home className="w-6 h-6 group-hover:scale-110 transition-transform" />
-            HOME
+          <button onClick={() => navigate('config')} className="flex-1 ornate-button flex items-center justify-center gap-3 py-4 text-base tracking-[0.15em]">
+            <Settings2 className="w-5 h-5" />
+            Change BPM
+          </button>
+          <button onClick={onHome} className="flex-1 ornate-button flex items-center justify-center gap-3 py-4 text-base tracking-[0.15em]">
+            <Home className="w-5 h-5" />
+            Home
           </button>
         </div>
-      </motion.div>
+      </div>
     </div>
   )
 }

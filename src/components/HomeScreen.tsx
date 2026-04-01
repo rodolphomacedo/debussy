@@ -1,7 +1,11 @@
 import { motion } from 'motion/react'
-import { Music, Mic, ChevronRight } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import { PianoKeyboard } from './PianoKeyboard'
-import type { Screen } from '../store/useAppStore'
+import { NavBar } from './NavBar'
+import { OrnateFrame } from './OrnateFrame'
+import { BookMusicIcon } from './icons/BookMusicIcon'
+import { QuillInkwellIcon } from './icons/QuillInkwellIcon'
+import { useAppStore, type Screen } from '../store/useAppStore'
 
 interface HomeScreenProps {
   onNavigate: (screen: Screen) => void
@@ -10,100 +14,113 @@ interface HomeScreenProps {
   pressedNotes: Set<number>
 }
 
+const RECENT_SESSIONS = [
+  { date: 'Oct 24', title: 'Clair de Lune', grade: 'A' },
+  { date: 'Oct 22', title: 'Arabesque No. 1', grade: 'A' },
+  { date: 'Oct 20', title: 'Prelude to the Afternoon of a Faun', grade: 'B' },
+  { date: 'Oct 18', title: "Children's Corner", grade: 'A' },
+]
+
 export function HomeScreen({ onNavigate, isConnected, deviceName, pressedNotes }: HomeScreenProps) {
+  const setSettingsOpen = useAppStore(s => s.setSettingsOpen)
+
   return (
     <div className="h-full flex flex-col overflow-hidden relative">
       <div className="leather-texture" />
 
-      {/* Top status bar */}
-      <div className="flex justify-between items-center p-6 relative z-10">
-        <div className="flex items-center gap-4 px-6 py-3 bg-black/60 border-2 border-gold/30 rounded-full shadow-[0_5px_15px_rgba(0,0,0,0.8),inset_0_0_10px_rgba(212,175,55,0.1)]">
-          <div className={`w-2.5 h-2.5 rounded-full ${isConnected ? 'bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.8)]' : 'bg-red-500'}`} />
-          <span className="text-gold-light font-serif italic text-sm tracking-widest">
-            {isConnected ? `MIDI Connected: ${deviceName}` : 'No MIDI Device'}
-          </span>
-        </div>
-      </div>
+      {/* NavBar */}
+      <NavBar
+        currentScreen="home"
+        onNavigate={onNavigate}
+        isConnected={isConnected}
+        deviceName={deviceName}
+        onSettingsOpen={() => setSettingsOpen(true)}
+      />
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col gap-12 max-w-6xl mx-auto w-full px-8 relative z-10 overflow-y-auto custom-scrollbar">
-        {/* Title */}
-        <div className="text-center relative mt-4">
-          <div className="absolute top-1/2 left-0 w-1/4 h-[1px] bg-gradient-to-r from-transparent to-gold/40" />
-          <div className="absolute top-1/2 right-0 w-1/4 h-[1px] bg-gradient-to-l from-transparent to-gold/40" />
-          <h1 className="text-6xl font-serif metallic-gold mb-3 tracking-[0.2em] uppercase">DEBUSSY</h1>
-          <p className="text-gold/40 italic font-serif text-xl tracking-widest">Harmonizing tradition with innovation</p>
-        </div>
-
+      <div className="flex-1 flex flex-col gap-8 max-w-6xl mx-auto w-full px-8 py-6 relative z-10 overflow-y-auto custom-scrollbar">
         {/* Mode cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
           {/* Practice card */}
           <motion.div
-            whileHover={{ y: -8, scale: 1.02 }}
+            whileHover={{ y: -6, scale: 1.01 }}
             onClick={() => onNavigate('practice')}
-            className="ornate-card p-12 flex flex-col items-center text-center gap-8 group"
+            className="ornate-card p-10 flex flex-col items-center text-center gap-6 group"
           >
-            <div className="leather-texture" />
-            <div className="absolute top-3 left-3 text-gold/30 text-3xl select-none pointer-events-none">❦</div>
-            <div className="absolute top-3 right-3 text-gold/30 text-3xl select-none pointer-events-none">❦</div>
-            <div className="absolute bottom-3 left-3 text-gold/30 text-3xl select-none pointer-events-none rotate-180">❦</div>
-            <div className="absolute bottom-3 right-3 text-gold/30 text-3xl select-none pointer-events-none rotate-180">❦</div>
+            <OrnateFrame variant="card">
+              <div className="flex flex-col items-center gap-6 p-4">
+                <h2 className="text-2xl font-serif metallic-gold tracking-wider">
+                  Practice Sheet Music
+                </h2>
 
-            <div className="w-28 h-28 rounded-full bg-gradient-to-br from-[#111] to-[#000] flex items-center justify-center border-4 border-gold/30 group-hover:border-gold transition-all duration-500 shadow-[0_10px_30px_rgba(0,0,0,0.9),inset_0_0_20px_rgba(212,175,55,0.2)]">
-              <Music className="w-12 h-12 text-gold group-hover:scale-110 transition-transform duration-500" />
-            </div>
+                <BookMusicIcon size={72} className="text-gold/70 group-hover:text-gold transition-colors duration-500" />
 
-            <div className="relative z-10">
-              <h2 className="text-3xl font-serif metallic-gold mb-3 tracking-[0.15em]">PRACTICE</h2>
-              <p className="text-gold/60 italic max-w-sm text-lg leading-relaxed">Master the classics with real-time feedback and performance tracking.</p>
-            </div>
+                <p className="text-gold/50 italic text-sm max-w-xs leading-relaxed">
+                  Browse library or continue learning.
+                </p>
 
-            <div className="flex items-center gap-4 text-gold-light font-serif border-b-2 border-gold/20 pb-2 group-hover:border-gold transition-all duration-500 tracking-[0.3em] text-sm uppercase">
-              <span>BEGIN JOURNEY</span>
-              <ChevronRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
-            </div>
+                <div className="flex items-center gap-3 text-gold-light font-serif border-b-2 border-gold/20 pb-2 group-hover:border-gold transition-all duration-500 tracking-[0.2em] text-xs uppercase">
+                  <span>OPEN LIBRARY</span>
+                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+            </OrnateFrame>
           </motion.div>
 
           {/* Capture card */}
           <motion.div
-            whileHover={{ y: -8, scale: 1.02 }}
+            whileHover={{ y: -6, scale: 1.01 }}
             onClick={() => onNavigate('capture')}
-            className="ornate-card p-12 flex flex-col items-center text-center gap-8 group"
+            className="ornate-card p-10 flex flex-col items-center text-center gap-6 group"
           >
-            <div className="leather-texture" />
-            <div className="absolute top-3 left-3 text-gold/30 text-3xl select-none pointer-events-none">❦</div>
-            <div className="absolute top-3 right-3 text-gold/30 text-3xl select-none pointer-events-none">❦</div>
-            <div className="absolute bottom-3 left-3 text-gold/30 text-3xl select-none pointer-events-none rotate-180">❦</div>
-            <div className="absolute bottom-3 right-3 text-gold/30 text-3xl select-none pointer-events-none rotate-180">❦</div>
+            <OrnateFrame variant="card">
+              <div className="flex flex-col items-center gap-6 p-4">
+                <h2 className="text-2xl font-serif metallic-gold tracking-wider">
+                  Capture Notes
+                </h2>
 
-            <div className="w-28 h-28 rounded-full bg-gradient-to-br from-[#111] to-[#000] flex items-center justify-center border-4 border-gold/30 group-hover:border-gold transition-all duration-500 shadow-[0_10px_30px_rgba(0,0,0,0.9),inset_0_0_20px_rgba(212,175,55,0.2)]">
-              <Mic className="w-12 h-12 text-gold group-hover:scale-110 transition-transform duration-500" />
-            </div>
+                <QuillInkwellIcon size={72} className="text-gold/70 group-hover:text-gold transition-colors duration-500" />
 
-            <div className="relative z-10">
-              <h2 className="text-3xl font-serif metallic-gold mb-3 tracking-[0.15em]">CAPTURE</h2>
-              <p className="text-gold/60 italic max-w-sm text-lg leading-relaxed">Instantly transcribe your improvisations into digital sheet music.</p>
-            </div>
+                <p className="text-gold/50 italic text-sm max-w-xs leading-relaxed">
+                  Record and transcribe your playing.
+                </p>
 
-            <div className="flex items-center gap-4 text-gold-light font-serif border-b-2 border-gold/20 pb-2 group-hover:border-gold transition-all duration-500 tracking-[0.3em] text-sm uppercase">
-              <span>OPEN RECORDER</span>
-              <ChevronRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
-            </div>
+                <div className="flex items-center gap-3 text-gold-light font-serif border-b-2 border-gold/20 pb-2 group-hover:border-gold transition-all duration-500 tracking-[0.2em] text-xs uppercase">
+                  <span>START RECORDING</span>
+                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+            </OrnateFrame>
           </motion.div>
+        </div>
+
+        {/* Recent Sessions */}
+        <div className="ornate-card p-6">
+          <OrnateFrame variant="card">
+            <div className="px-4 py-2">
+              <h3 className="text-center font-serif text-gold/80 tracking-wider text-lg mb-4">
+                Recent Sessions
+              </h3>
+              <div className="flex flex-col gap-2">
+                {RECENT_SESSIONS.map((session, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center justify-between px-4 py-2 border-b border-gold/10 last:border-b-0 text-sm"
+                  >
+                    <span className="text-gold/40 font-serif italic w-16">{session.date}</span>
+                    <span className="text-gold/70 font-serif flex-1 px-4">{session.title}</span>
+                    <span className="text-gold font-serif italic">Grade: {session.grade}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </OrnateFrame>
         </div>
       </div>
 
       {/* Bottom piano keyboard */}
-      <div className="h-36 mt-auto bg-gradient-to-t from-[#1a1a1a] via-[#0a0a0a] to-[#2a2a2a] pt-6 border-t-4 border-gold/30 relative shadow-[0_-15px_50px_rgba(0,0,0,0.9)] z-20">
-        <div className="leather-texture" />
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-4 opacity-30">
-          <div className="w-24 h-[1px] bg-gradient-to-r from-transparent to-gold" />
-          <span className="text-gold font-serif italic text-xs tracking-[0.5em]">DEBUSSY</span>
-          <div className="w-24 h-[1px] bg-gradient-to-l from-transparent to-gold" />
-        </div>
-        <div className="relative z-10 h-full px-8">
-          <PianoKeyboard activeKeys={pressedNotes} />
-        </div>
+      <div className="h-44 mt-auto relative z-20">
+        <PianoKeyboard activeKeys={pressedNotes} />
       </div>
     </div>
   )
