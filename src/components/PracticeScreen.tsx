@@ -154,14 +154,14 @@ export function PracticeScreen({
       </div>
 
       {/* Sheet music area */}
-      <div className="flex-1 mx-6 rounded-sm overflow-x-auto flex items-start pt-2"
-        style={{ background: '#f5f0e0', border: '2px solid rgba(212,175,55,0.4)' }}>
-        <div className="w-full px-4">
+      <div className="flex-1 sheet-music-dark mx-6 rounded-sm" style={{ minHeight: '280px', overflowX: 'auto' }}>
+        <div style={{ padding: '8px 16px' }}>
           <ScoreRenderer
             score={score}
             cursorBeat={isPlaying ? currentBeat : undefined}
             hitNotes={hitNotes.size > 0 ? hitNotes : undefined}
             missNotes={missNotes.size > 0 ? missNotes : undefined}
+            darkMode
           />
         </div>
       </div>

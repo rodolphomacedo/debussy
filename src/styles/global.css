@@ -653,9 +653,36 @@
     0 0 0 4px rgba(212,175,55,0.15);
 }
 
+/* Force gold colors on all VexFlow SVG elements.
+   !important is required to override VexFlow's inline style="fill:black" on the SVG root. */
 .sheet-music-dark .score-renderer svg {
-  --vf-fill: #D4AF37;
-  --vf-stroke: #D4AF37;
+  background: transparent !important;
+}
+.sheet-music-dark .score-renderer svg path,
+.sheet-music-dark .score-renderer svg line,
+.sheet-music-dark .score-renderer svg rect,
+.sheet-music-dark .score-renderer svg circle,
+.sheet-music-dark .score-renderer svg text,
+.sheet-music-dark .score-renderer svg polygon {
+  fill: #D4AF37 !important;
+  stroke: rgba(212, 175, 55, 0.55) !important;
+}
+/* Transparent fills stay transparent */
+.sheet-music-dark .score-renderer svg path[fill="none"],
+.sheet-music-dark .score-renderer svg rect[fill="none"] {
+  fill: none !important;
+}
+/* Hit notes — green override */
+.sheet-music-dark .score-renderer svg .vf-hit path,
+.sheet-music-dark .score-renderer svg .vf-hit line {
+  fill: #4caf7a !important;
+  stroke: #4caf7a !important;
+}
+/* Miss notes — red override */
+.sheet-music-dark .score-renderer svg .vf-miss path,
+.sheet-music-dark .score-renderer svg .vf-miss line {
+  fill: #c94c4c !important;
+  stroke: #c94c4c !important;
 }
 
 /* ── Leather texture overlay ── */
