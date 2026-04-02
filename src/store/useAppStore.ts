@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import type { ScoreData } from '../lib/demoScore'
 import type { ScoreResult } from '../lib/scorer'
 
-export type Screen = 'loading' | 'home' | 'selection' | 'config' | 'practice' | 'results' | 'capture'
+export type Screen = 'loading' | 'home' | 'selection' | 'config' | 'practice' | 'results' | 'capture' | 'ear-training'
 
 export interface CapturedNote {
   pitch: number

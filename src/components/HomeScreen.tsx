@@ -5,6 +5,7 @@ import { NavBar } from './NavBar'
 import { OrnateFrame } from './OrnateFrame'
 import { BookMusicIcon } from './icons/BookMusicIcon'
 import { QuillInkwellIcon } from './icons/QuillInkwellIcon'
+import { EarMusicIcon } from './icons/EarMusicIcon'
 import { useAppStore, type Screen } from '../store/useAppStore'
 
 interface HomeScreenProps {
@@ -40,7 +41,7 @@ export function HomeScreen({ onNavigate, isConnected, deviceName, pressedNotes }
       {/* Main content */}
       <div className="flex-1 flex flex-col gap-8 max-w-6xl mx-auto w-full px-8 py-6 relative z-10 overflow-y-auto custom-scrollbar">
         {/* Mode cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           {/* Practice card */}
           <motion.div
             whileHover={{ y: -6, scale: 1.01 }}
@@ -61,6 +62,32 @@ export function HomeScreen({ onNavigate, isConnected, deviceName, pressedNotes }
 
                 <div className="flex items-center gap-3 text-gold-light font-serif border-b-2 border-gold/20 pb-2 group-hover:border-gold transition-all duration-500 tracking-[0.2em] text-xs uppercase">
                   <span>OPEN LIBRARY</span>
+                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+            </OrnateFrame>
+          </motion.div>
+
+          {/* Ear Training card */}
+          <motion.div
+            whileHover={{ y: -6, scale: 1.01 }}
+            onClick={() => onNavigate('ear-training')}
+            className="ornate-card p-10 flex flex-col items-center text-center gap-6 group"
+          >
+            <OrnateFrame variant="card">
+              <div className="flex flex-col items-center gap-6 p-4">
+                <h2 className="text-2xl font-serif metallic-gold tracking-wider">
+                  Play by Ear
+                </h2>
+
+                <EarMusicIcon size={72} className="text-gold/70 group-hover:text-gold transition-colors duration-500" />
+
+                <p className="text-gold/50 italic text-sm max-w-xs leading-relaxed">
+                  Listen, learn, and reproduce melodies by ear.
+                </p>
+
+                <div className="flex items-center gap-3 text-gold-light font-serif border-b-2 border-gold/20 pb-2 group-hover:border-gold transition-all duration-500 tracking-[0.2em] text-xs uppercase">
+                  <span>START LISTENING</span>
                   <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
