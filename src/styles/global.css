@@ -1033,8 +1033,167 @@ input[type="range"].gold-slider::-webkit-slider-thumb {
 /* ── Piano keyboard — ~40% of screen ── */
 .practice-keyboard {
   flex-shrink: 0;
-  /* 40vh gives a generous keyboard. calc clamps it between 220px and 320px. */
   height: clamp(220px, 40vh, 320px);
   position: relative;
   z-index: 20;
+}
+
+/* ══════════════════════════════════════════
+   PRACTICE SCREEN — RESPONSIVE LAYOUT
+   New class-based layout (migrated from inline styles)
+   ══════════════════════════════════════════ */
+
+.practice-layout {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #100e08;
+  overflow: hidden;
+}
+
+.practice-top-section {
+  flex: 1 1 0;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.practice-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 25;
+}
+
+.practice-title-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.practice-logo-text {
+  font-family: var(--font-elegant);
+  font-size: 16px;
+  font-style: italic;
+  letter-spacing: 0.12em;
+  background: linear-gradient(to bottom, #e8c87a, #c9a84c, #a07828, #c9a84c);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.practice-subtitle-text {
+  font-family: var(--font-serif);
+  font-size: 8px;
+  color: #8a6520;
+  letter-spacing: 0.15em;
+  font-style: italic;
+}
+
+.practice-stats {
+  display: flex;
+  gap: 8px;
+  font-family: var(--font-serif);
+  font-size: 11px;
+}
+
+.practice-score-box {
+  flex: 1 1 0;
+  min-height: 0;
+  margin: 0 8px;
+  position: relative;
+  z-index: 10;
+  background: linear-gradient(to bottom, #1e1a10, #141008, #1a160e);
+  border: 1.5px solid rgba(160,120,38,0.3);
+  border-radius: 3px;
+  box-shadow: inset 0 0 40px rgba(0,0,0,0.5);
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.practice-score-inner {
+  padding: 8px 12px;
+}
+
+.practice-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 12px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 25;
+}
+
+.practice-play-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* ── Practice responsive: tablet+ ── */
+@media (min-width: 640px) {
+  .practice-title-row {
+    padding: 8px 20px;
+  }
+  .practice-logo-text {
+    font-size: 20px;
+  }
+  .practice-subtitle-text {
+    font-size: 9px;
+  }
+  .practice-stats {
+    gap: 12px;
+    font-size: 13px;
+  }
+  .practice-score-box {
+    margin: 0 16px;
+  }
+  .practice-score-inner {
+    padding: 12px 20px;
+  }
+  .practice-controls-row {
+    padding: 6px 24px;
+  }
+  .practice-play-icon {
+    width: 22px;
+    height: 22px;
+  }
+  .practice-keyboard {
+    height: clamp(220px, 40vh, 320px);
+  }
+}
+
+/* ── Practice responsive: mobile ── */
+@media (max-width: 639px) {
+  .practice-keyboard {
+    height: 140px;
+  }
+  .practice-play-btn {
+    width: 42px;
+    height: 42px;
+  }
+  .practice-reset-btn {
+    padding: 4px 10px;
+    font-size: 10px;
+  }
+}
+
+/* VexFlow overrides for practice-score-box (same as practice-score-area) */
+.practice-score-box .score-renderer svg path,
+.practice-score-box .score-renderer svg line,
+.practice-score-box .score-renderer svg rect,
+.practice-score-box .score-renderer svg circle,
+.practice-score-box .score-renderer svg text,
+.practice-score-box .score-renderer svg polygon {
+  fill: #C9A84C !important;
+  stroke: rgba(180, 135, 45, 0.6) !important;
+}
+.practice-score-box .score-renderer svg path[fill="none"],
+.practice-score-box .score-renderer svg rect[fill="none"] {
+  fill: none !important;
 }

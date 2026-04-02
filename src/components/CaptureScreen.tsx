@@ -261,22 +261,22 @@ export function CaptureScreen({ pressedNotes, lastNoteOn, bpm, onBack }: Capture
       <OrnateFrame variant="full" className="absolute inset-0 pointer-events-none z-40" />
 
       {/* Header */}
-      <div className="flex items-center justify-between px-8 py-3 relative z-30">
-        <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between px-4 sm:px-8 py-2 sm:py-3 relative z-30">
+        <div className="flex items-center gap-3 sm:gap-4">
           <button onClick={onBack} className="flex items-center gap-2 text-gold/50 hover:text-gold transition-colors cursor-pointer group">
-            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform" />
           </button>
-          <span className="text-2xl font-serif metallic-gold tracking-wider italic">
+          <span className="text-lg sm:text-2xl font-serif metallic-gold tracking-wider italic">
             Debussy
           </span>
         </div>
 
         {/* Gemstone recording indicator */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           {isRecording && (
             <>
               <div className="gem-indicator active" />
-              <span className="text-red-400 text-xs font-serif uppercase tracking-[0.3em]">
+              <span className="hidden sm:inline text-red-400 text-xs font-serif uppercase tracking-[0.3em]">
                 Recording
               </span>
             </>
@@ -284,30 +284,30 @@ export function CaptureScreen({ pressedNotes, lastNoteOn, bpm, onBack }: Capture
         </div>
       </div>
 
-      {/* Main content area — sheet music + right sidebar */}
-      <div className="flex-1 flex relative z-10 overflow-hidden">
+      {/* Main content area — sheet music + sidebar (stacked on mobile) */}
+      <div className="flex-1 flex flex-col sm:flex-row relative z-10 overflow-hidden">
         {/* Sheet music area */}
-        <div className="flex-1 sheet-music-dark mx-4 ml-6 rounded-sm flex flex-col">
+        <div className="flex-1 sheet-music-dark mx-3 sm:mx-4 sm:ml-6 rounded-sm flex flex-col">
           {capturedScore ? (
-            <div className="overflow-x-auto flex-1 flex items-center px-4">
+            <div className="overflow-x-auto flex-1 flex items-center px-2 sm:px-4">
               <ScoreRenderer score={capturedScore} darkMode />
             </div>
           ) : (
-            <div className="flex-1 flex flex-col justify-center gap-10 px-10">
+            <div className="flex-1 flex flex-col justify-center gap-6 sm:gap-10 px-4 sm:px-10">
               {[1, 2].map(row => (
-                <div key={row} className="relative h-20 w-full">
+                <div key={row} className="relative h-16 sm:h-20 w-full">
                   <div className="space-y-[14px]">
                     {[1, 2, 3, 4, 5].map(i => (
                       <div key={i} className="h-[1px] w-full bg-gold/20" />
                     ))}
                   </div>
-                  <div className="absolute left-0 top-[-10px] text-5xl font-serif text-gold/40 select-none">
+                  <div className="absolute left-0 top-[-10px] text-4xl sm:text-5xl font-serif text-gold/40 select-none">
                     {row === 1 ? '\u{1D11E}' : '\u{1D122}'}
                   </div>
 
                   {isRecording && (
-                    <div className="absolute inset-0 flex items-center px-20">
-                      <div className="flex gap-8">
+                    <div className="absolute inset-0 flex items-center px-10 sm:px-20">
+                      <div className="flex gap-4 sm:gap-8">
                         {Array.from({ length: Math.min(rawNotesRef.current.length, 8) }).map((_, i) => (
                           <motion.div
                             key={i}
@@ -315,8 +315,8 @@ export function CaptureScreen({ pressedNotes, lastNoteOn, bpm, onBack }: Capture
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             transition={{ delay: i * 0.1, type: 'spring' }}
                           >
-                            <div className="w-6 h-4 rounded-full bg-gold/80 rotate-[-15deg]" />
-                            <div className="absolute right-0 bottom-1/2 w-[2px] h-12 bg-gold/60 origin-bottom" />
+                            <div className="w-4 sm:w-6 h-3 sm:h-4 rounded-full bg-gold/80 rotate-[-15deg]" />
+                            <div className="absolute right-0 bottom-1/2 w-[2px] h-8 sm:h-12 bg-gold/60 origin-bottom" />
                           </motion.div>
                         ))}
                       </div>
@@ -328,12 +328,9 @@ export function CaptureScreen({ pressedNotes, lastNoteOn, bpm, onBack }: Capture
           )}
         </div>
 
-        {/* Right sidebar — controls panel matching reference */}
-        <div className="w-20 flex flex-col items-center justify-between py-4 mr-4">
-          {/* Volume slider */}
+        {/* Sidebar — vertical on tablet+, horizontal strip on mobile */}
+        <div className="flex sm:flex-col items-center justify-around sm:justify-between py-2 sm:py-4 px-4 sm:px-0 sm:w-20 sm:mr-4">
           <VerticalSlider label="Volume" value={pianoVolume} onChange={setPianoVolume} />
-
-          {/* Reverb knob */}
           <RotaryKnob label="Reverb" value={reverbAmount} onChange={setReverbAmount} />
 
           {/* Sustain lock toggle */}
@@ -363,7 +360,7 @@ export function CaptureScreen({ pressedNotes, lastNoteOn, bpm, onBack }: Capture
           </button>
 
           {/* Instrument label */}
-          <div className="text-center">
+          <div className="text-center hidden sm:block">
             <span className="text-gold/25 text-[7px] uppercase tracking-[0.12em] font-serif block">Instrument</span>
             <span className="text-gold/50 text-[8px] font-serif tracking-wider block mt-0.5">Grand</span>
             <span className="text-gold/50 text-[8px] font-serif tracking-wider block">Piano</span>
@@ -372,30 +369,33 @@ export function CaptureScreen({ pressedNotes, lastNoteOn, bpm, onBack }: Capture
       </div>
 
       {/* Controls bar */}
-      <div className="flex items-center justify-center gap-5 px-8 py-3 relative z-30">
+      <div className="flex items-center justify-center gap-3 sm:gap-5 px-4 sm:px-8 py-2 sm:py-3 relative z-30 flex-wrap">
         <button
           onClick={handleToggleRecording}
-          className={`ornate-button flex items-center gap-3 px-8 py-2.5 text-sm ${isRecording ? '!bg-gradient-to-b !from-[#3a1515] !to-[#1a0a0a] !text-red-400 !border-red-500/40' : ''}`}
+          className={`ornate-button flex items-center gap-2 sm:gap-3 px-4 sm:px-8 py-2 sm:py-2.5 text-xs sm:text-sm ${isRecording ? '!bg-gradient-to-b !from-[#3a1515] !to-[#1a0a0a] !text-red-400 !border-red-500/40' : ''}`}
         >
           {isRecording ? <Square size={14} className="fill-current" /> : <Mic size={14} />}
-          {isRecording ? 'Stop Recording' : 'Start/Stop Recording'}
+          <span className="hidden sm:inline">{isRecording ? 'Stop Recording' : 'Start/Stop Recording'}</span>
+          <span className="sm:hidden">{isRecording ? 'Stop' : 'Record'}</span>
         </button>
 
-        <button className="ornate-button-dark px-6 py-2.5 text-sm font-serif tracking-wider">
-          Quantize BPM
+        <button className="ornate-button-dark px-3 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-serif tracking-wider">
+          <span className="hidden sm:inline">Quantize BPM</span>
+          <span className="sm:hidden">Quantize</span>
         </button>
 
         <button
           onClick={handleClear}
-          className="ornate-button-dark px-6 py-2.5 text-sm font-serif tracking-wider flex items-center gap-2"
+          className="ornate-button-dark px-3 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-serif tracking-wider flex items-center gap-1 sm:gap-2"
         >
           <RotateCcw size={13} />
-          Undo Last Note
+          <span className="hidden sm:inline">Undo Last Note</span>
+          <span className="sm:hidden">Undo</span>
         </button>
       </div>
 
       {/* Piano keyboard */}
-      <div className="h-52 relative z-20">
+      <div className="h-36 sm:h-44 lg:h-52 relative z-20">
         <PianoKeyboard activeKeys={pressedNotes} />
       </div>
     </div>

@@ -67,8 +67,8 @@ export function ResultsScreen({ result, onHome, onRetry }: ResultsScreenProps) {
     <div className="h-full flex flex-col overflow-hidden relative">
       <div className="leather-texture" />
 
-      {/* Golden roses decoration (right side) */}
-      <div className="absolute right-0 top-0 bottom-0 w-80 pointer-events-none z-0 opacity-60">
+      {/* Golden roses decoration (right side) — hidden on mobile */}
+      <div className="hidden sm:block absolute right-0 top-0 bottom-0 w-60 lg:w-80 pointer-events-none z-0 opacity-40 sm:opacity-60">
         <GoldenRosesIcon className="w-full h-full text-gold" />
       </div>
 
@@ -82,28 +82,28 @@ export function ResultsScreen({ result, onHome, onRetry }: ResultsScreenProps) {
       />
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col items-start px-12 py-8 relative z-10 overflow-y-auto custom-scrollbar max-w-4xl">
+      <div className="flex-1 flex flex-col items-start px-4 sm:px-8 lg:px-12 py-4 sm:py-8 relative z-10 overflow-y-auto custom-scrollbar max-w-4xl">
         {/* Grade circle */}
         <motion.div
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.8, type: 'spring' }}
-          className="flex items-center justify-center mx-auto mb-8"
+          className="flex items-center justify-center mx-auto mb-4 sm:mb-8"
         >
-          <div className="w-28 h-28 rounded-full bg-gradient-to-br from-black/80 to-black/95 border-4 border-gold/50 flex items-center justify-center shadow-[0_10px_40px_rgba(0,0,0,0.8),0_0_30px_rgba(212,175,55,0.2)]">
-            <span className="text-6xl font-elegant metallic-gold italic">{result.grade}</span>
+          <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-gradient-to-br from-black/80 to-black/95 border-4 border-gold/50 flex items-center justify-center shadow-[0_10px_40px_rgba(0,0,0,0.8),0_0_30px_rgba(212,175,55,0.2)]">
+            <span className="text-4xl sm:text-6xl font-elegant metallic-gold italic">{result.grade}</span>
           </div>
         </motion.div>
 
         {/* Session Statistics heading */}
-        <div className="w-full mb-6">
-          <h2 className="text-2xl font-serif metallic-gold tracking-wider text-center mb-2">
+        <div className="w-full mb-4 sm:mb-6">
+          <h2 className="text-xl sm:text-2xl font-serif metallic-gold tracking-wider text-center mb-2">
             Session Statistics
           </h2>
           <div className="flex items-center justify-center gap-3">
-            <div className="h-[1px] w-20 bg-gradient-to-r from-transparent to-gold/40" />
-            <span className="text-gold/30 text-sm">❦</span>
-            <div className="h-[1px] w-20 bg-gradient-to-l from-transparent to-gold/40" />
+            <div className="h-[1px] w-12 sm:w-20 bg-gradient-to-r from-transparent to-gold/40" />
+            <span className="text-gold/30 text-sm">&#10086;</span>
+            <div className="h-[1px] w-12 sm:w-20 bg-gradient-to-l from-transparent to-gold/40" />
           </div>
         </div>
 
@@ -112,13 +112,13 @@ export function ResultsScreen({ result, onHome, onRetry }: ResultsScreenProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="w-full border-collapse mb-8"
+          className="w-full border-collapse mb-6 sm:mb-8"
         >
           <thead>
             <tr className="border-b-2 border-gold/30">
-              <th className="text-left py-2 text-gold/60 font-serif italic text-sm tracking-wider">Metric</th>
-              <th className="text-center py-2 text-gold/60 font-serif italic text-sm tracking-wider">Result</th>
-              <th className="text-right py-2 text-gold/60 font-serif italic text-sm tracking-wider">Details</th>
+              <th className="text-left py-2 text-gold/60 font-serif italic text-xs sm:text-sm tracking-wider">Metric</th>
+              <th className="text-center py-2 text-gold/60 font-serif italic text-xs sm:text-sm tracking-wider">Result</th>
+              <th className="hidden sm:table-cell text-right py-2 text-gold/60 font-serif italic text-sm tracking-wider">Details</th>
             </tr>
           </thead>
           <tbody>
@@ -130,9 +130,9 @@ export function ResultsScreen({ result, onHome, onRetry }: ResultsScreenProps) {
                 transition={{ delay: 0.4 + i * 0.1 }}
                 className="border-b border-gold/10"
               >
-                <td className="py-3 text-gold/70 font-serif">{row.label}</td>
-                <td className="py-3 text-gold-light font-serif text-center text-lg">{row.value}</td>
-                <td className="py-3 text-gold/40 font-serif italic text-sm text-right">{getDetailText(row.label, row.value)}</td>
+                <td className="py-2 sm:py-3 text-gold/70 font-serif text-xs sm:text-base">{row.label}</td>
+                <td className="py-2 sm:py-3 text-gold-light font-serif text-center text-base sm:text-lg">{row.value}</td>
+                <td className="hidden sm:table-cell py-3 text-gold/40 font-serif italic text-sm text-right">{getDetailText(row.label, row.value)}</td>
               </motion.tr>
             ))}
           </tbody>
@@ -143,14 +143,14 @@ export function ResultsScreen({ result, onHome, onRetry }: ResultsScreenProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
-          className="w-full mb-8"
+          className="w-full mb-6 sm:mb-8"
         >
-          <h3 className="text-lg font-serif metallic-gold tracking-wider mb-4">
+          <h3 className="text-base sm:text-lg font-serif metallic-gold tracking-wider mb-3 sm:mb-4">
             Performance Consistency
           </h3>
           <div className="relative">
             {/* Section labels */}
-            <div className="flex justify-between mb-1 text-gold/30 text-[10px] font-serif tracking-wider">
+            <div className="flex justify-between mb-1 text-gold/30 text-[8px] sm:text-[10px] font-serif tracking-wider">
               {sections.map(s => <span key={s}>{s}</span>)}
             </div>
             <svg width="100%" height={chartHeight + 10} viewBox={`0 0 ${chartWidth} ${chartHeight + 10}`} className="overflow-visible">
@@ -191,7 +191,7 @@ export function ResultsScreen({ result, onHome, onRetry }: ResultsScreenProps) {
               </defs>
             </svg>
             {/* Time markers */}
-            <div className="flex justify-between mt-1 text-gold/20 text-[9px] font-mono">
+            <div className="flex justify-between mt-1 text-gold/20 text-[8px] sm:text-[9px] font-mono">
               <span>0:00</span>
               <span>1:30</span>
               <span>3:00</span>
@@ -201,18 +201,18 @@ export function ResultsScreen({ result, onHome, onRetry }: ResultsScreenProps) {
           </div>
         </motion.div>
 
-        {/* Action buttons */}
-        <div className="flex gap-6 w-full">
-          <button onClick={onRetry} className="flex-1 ornate-button flex items-center justify-center gap-3 py-4 text-base tracking-[0.15em]">
-            <RotateCcw className="w-5 h-5" />
+        {/* Action buttons — stacked on mobile, horizontal on tablet+ */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 w-full">
+          <button onClick={onRetry} className="flex-1 ornate-button flex items-center justify-center gap-2 sm:gap-3 py-3 sm:py-4 text-sm sm:text-base tracking-[0.15em]">
+            <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" />
             Try Again
           </button>
-          <button onClick={() => navigate('config')} className="flex-1 ornate-button flex items-center justify-center gap-3 py-4 text-base tracking-[0.15em]">
-            <Settings2 className="w-5 h-5" />
+          <button onClick={() => navigate('config')} className="flex-1 ornate-button flex items-center justify-center gap-2 sm:gap-3 py-3 sm:py-4 text-sm sm:text-base tracking-[0.15em]">
+            <Settings2 className="w-4 h-4 sm:w-5 sm:h-5" />
             Change BPM
           </button>
-          <button onClick={onHome} className="flex-1 ornate-button flex items-center justify-center gap-3 py-4 text-base tracking-[0.15em]">
-            <Home className="w-5 h-5" />
+          <button onClick={onHome} className="flex-1 ornate-button flex items-center justify-center gap-2 sm:gap-3 py-3 sm:py-4 text-sm sm:text-base tracking-[0.15em]">
+            <Home className="w-4 h-4 sm:w-5 sm:h-5" />
             Home
           </button>
         </div>

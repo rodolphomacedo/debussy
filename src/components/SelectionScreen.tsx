@@ -64,18 +64,18 @@ export function SelectionScreen({ onNavigate, isConnected, deviceName }: Selecti
         onSettingsOpen={() => setSettingsOpen(true)}
       />
 
-      <div className="flex-1 flex flex-col px-8 py-6 relative z-10 overflow-hidden">
-        <h2 className="text-2xl font-serif metallic-gold tracking-wider mb-6">
+      <div className="flex-1 flex flex-col px-4 sm:px-6 lg:px-8 py-4 sm:py-6 relative z-10 overflow-hidden">
+        <h2 className="text-xl sm:text-2xl font-serif metallic-gold tracking-wider mb-4 sm:mb-6">
           Sheet Music Selection
         </h2>
 
         {/* Difficulty tabs */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-2 mb-4 sm:mb-6 flex-wrap">
           {DIFFICULTY_TABS.map(tab => (
             <button
               key={tab}
               onClick={() => setFilterDifficulty(filterDifficulty === tab ? null : tab)}
-              className={`px-5 py-1.5 rounded-full text-xs font-serif tracking-wider border transition-all cursor-pointer ${
+              className={`px-3 sm:px-5 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-serif tracking-wider border transition-all cursor-pointer ${
                 filterDifficulty === tab
                   ? 'bg-gold/20 border-gold/60 text-gold'
                   : 'bg-black/30 border-gold/20 text-gold/50 hover:border-gold/40'
@@ -86,15 +86,15 @@ export function SelectionScreen({ onNavigate, isConnected, deviceName }: Selecti
           ))}
         </div>
 
-        {/* Two column layout */}
-        <div className="flex-1 flex gap-8 min-h-0">
+        {/* Two column layout (stacked on mobile) */}
+        <div className="flex-1 flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8 min-h-0">
           {/* Left: piece list */}
-          <div className="flex-1 flex flex-col gap-2 overflow-y-auto custom-scrollbar pr-2">
+          <div className="flex-1 flex flex-col gap-2 overflow-y-auto custom-scrollbar pr-0 lg:pr-2">
             {filteredPieces.map(piece => (
               <button
                 key={piece.id}
                 onClick={() => setSelectedId(piece.id)}
-                className={`w-full text-left px-6 py-4 rounded-sm border-2 transition-all cursor-pointer ${
+                className={`w-full text-left px-4 sm:px-6 py-3 sm:py-4 rounded-sm border-2 transition-all cursor-pointer ${
                   selectedId === piece.id
                     ? 'border-gold/60 bg-gold/5'
                     : 'border-gold/15 bg-black/20 hover:border-gold/30'
@@ -102,12 +102,12 @@ export function SelectionScreen({ onNavigate, isConnected, deviceName }: Selecti
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="font-serif text-gold-light text-lg tracking-wide">{piece.title}</div>
-                    <div className="text-gold/40 text-xs font-serif italic">{piece.composer}</div>
+                    <div className="font-serif text-gold-light text-base sm:text-lg tracking-wide">{piece.title}</div>
+                    <div className="text-gold/40 text-[10px] sm:text-xs font-serif italic">{piece.composer}</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-gold/60 text-sm font-mono">{piece.bpm} BPM</div>
-                    <div className="text-gold/30 text-[10px] font-serif tracking-wider">
+                    <div className="text-gold/60 text-xs sm:text-sm font-mono">{piece.bpm} BPM</div>
+                    <div className="text-gold/30 text-[9px] sm:text-[10px] font-serif tracking-wider">
                       Difficulty: {piece.difficulty}
                     </div>
                   </div>
@@ -117,9 +117,9 @@ export function SelectionScreen({ onNavigate, isConnected, deviceName }: Selecti
           </div>
 
           {/* Right: preview + start button */}
-          <div className="w-96 flex flex-col gap-6">
+          <div className="w-full lg:w-96 flex flex-col gap-4 sm:gap-6 shrink-0">
             {/* Score preview */}
-            <div className="flex-1 ornate-card p-4 flex items-center justify-center overflow-hidden">
+            <div className="flex-1 ornate-card p-3 sm:p-4 flex items-center justify-center overflow-hidden min-h-[120px] sm:min-h-[160px]">
               <OrnateFrame variant="card">
                 <div className="p-2">
                   {selectedPiece.score ? (
@@ -127,7 +127,7 @@ export function SelectionScreen({ onNavigate, isConnected, deviceName }: Selecti
                       <ScoreRenderer score={selectedPiece.score} darkMode />
                     </div>
                   ) : (
-                    <div className="h-40 flex items-center justify-center text-gold/30 font-serif italic text-sm">
+                    <div className="h-28 sm:h-40 flex items-center justify-center text-gold/30 font-serif italic text-xs sm:text-sm">
                       Preview not available
                     </div>
                   )}
@@ -138,7 +138,7 @@ export function SelectionScreen({ onNavigate, isConnected, deviceName }: Selecti
             {/* Start button */}
             <button
               onClick={handleStart}
-              className="ornate-button py-5 text-xl tracking-[0.2em] text-center"
+              className="ornate-button py-3 sm:py-5 text-base sm:text-xl tracking-[0.2em] text-center"
             >
               Start
             </button>

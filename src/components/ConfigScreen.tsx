@@ -85,20 +85,20 @@ export function ConfigScreen({ onNavigate }: ConfigScreenProps) {
   })
 
   return (
-    <div className="h-full flex flex-col items-center justify-center overflow-hidden relative velvet-bg">
+    <div className="h-full flex flex-col items-center justify-start sm:justify-center overflow-y-auto sm:overflow-hidden relative velvet-bg py-6 sm:py-0 px-4 sm:px-0">
       {/* Title */}
-      <div className="text-center mb-10">
-        <h1 className="text-4xl font-serif metallic-gold tracking-[0.2em] mb-2">DEBUSSY</h1>
-        <p className="text-gold/40 font-serif italic text-base tracking-widest">Session Configuration</p>
+      <div className="text-center mb-6 sm:mb-10">
+        <h1 className="text-2xl sm:text-4xl font-serif metallic-gold tracking-[0.2em] mb-2">DEBUSSY</h1>
+        <p className="text-gold/40 font-serif italic text-sm sm:text-base tracking-widest">Session Configuration</p>
       </div>
 
-      {/* Main content row */}
-      <div className="flex items-center gap-16">
-        {/* Left: Toggle switches */}
-        <div className="flex flex-col gap-8">
+      {/* Main content — stacked on mobile, horizontal on desktop */}
+      <div className="flex flex-col lg:flex-row items-center gap-8 sm:gap-12 lg:gap-16 w-full max-w-4xl">
+        {/* Toggle switches */}
+        <div className="flex flex-col gap-5 sm:gap-8 order-2 lg:order-1">
           {/* Initial Count toggle */}
-          <div className="flex items-center gap-4">
-            <span className="text-gold/50 font-serif text-sm tracking-wider w-28 text-right">Initial Count</span>
+          <div className="flex items-center gap-3 sm:gap-4">
+            <span className="text-gold/50 font-serif text-xs sm:text-sm tracking-wider w-24 sm:w-28 text-right">Initial Count</span>
             <button
               onClick={() => setInitialCount(!initialCount)}
               className={`toggle-switch ${initialCount ? 'active' : ''}`}
@@ -109,8 +109,8 @@ export function ConfigScreen({ onNavigate }: ConfigScreenProps) {
           </div>
 
           {/* Sound Feedback toggle */}
-          <div className="flex items-center gap-4">
-            <span className="text-gold/50 font-serif text-sm tracking-wider w-28 text-right">Sound Feedback</span>
+          <div className="flex items-center gap-3 sm:gap-4">
+            <span className="text-gold/50 font-serif text-xs sm:text-sm tracking-wider w-24 sm:w-28 text-right">Sound Feedback</span>
             <button
               onClick={() => setSoundFeedback(!soundFeedback)}
               className={`toggle-switch ${soundFeedback ? 'active' : ''}`}
@@ -122,13 +122,13 @@ export function ConfigScreen({ onNavigate }: ConfigScreenProps) {
         </div>
 
         {/* Center: BPM Dial */}
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center order-1 lg:order-2">
           <svg
             ref={dialRef}
-            width="280"
-            height="280"
+            width="220"
+            height="220"
             viewBox="0 0 280 280"
-            className="cursor-pointer"
+            className="cursor-pointer sm:w-[280px] sm:h-[280px]"
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
@@ -179,7 +179,7 @@ export function ConfigScreen({ onNavigate }: ConfigScreenProps) {
 
           {/* BPM value display */}
           <div className="text-center -mt-2">
-            <span className="text-3xl font-serif metallic-gold">{bpm}</span>
+            <span className="text-2xl sm:text-3xl font-serif metallic-gold">{bpm}</span>
           </div>
 
           {/* Metronome button */}
@@ -188,13 +188,13 @@ export function ConfigScreen({ onNavigate }: ConfigScreenProps) {
           </button>
         </div>
 
-        {/* Right: Hand selection */}
-        <div className="flex flex-col gap-4">
+        {/* Hand selection */}
+        <div className="flex flex-col gap-3 sm:gap-4 order-3">
           {(['both', 'right', 'left'] as const).map(hand => (
             <button
               key={hand}
               onClick={() => setHandSelection(hand)}
-              className={`px-6 py-3 rounded-sm border-2 transition-all cursor-pointer flex items-center gap-4 ${
+              className={`px-4 sm:px-6 py-2.5 sm:py-3 rounded-sm border-2 transition-all cursor-pointer flex items-center gap-3 sm:gap-4 ${
                 handSelection === hand
                   ? 'border-gold/60 bg-gold/10'
                   : 'border-gold/15 bg-black/30 hover:border-gold/30'
@@ -205,7 +205,7 @@ export function ConfigScreen({ onNavigate }: ConfigScreenProps) {
                 {[0, 1, 2, 3, 4, 5, 6].map(i => (
                   <div
                     key={i}
-                    className={`w-2.5 h-6 rounded-b-sm border border-gold/20 ${
+                    className={`w-2 sm:w-2.5 h-5 sm:h-6 rounded-b-sm border border-gold/20 ${
                       (hand === 'both') ||
                       (hand === 'right' && i >= 3) ||
                       (hand === 'left' && i <= 3)
@@ -215,7 +215,7 @@ export function ConfigScreen({ onNavigate }: ConfigScreenProps) {
                   />
                 ))}
               </div>
-              <span className="text-gold/70 font-serif text-sm tracking-wider uppercase">
+              <span className="text-gold/70 font-serif text-xs sm:text-sm tracking-wider uppercase">
                 {hand === 'both' ? 'Both' : hand === 'right' ? 'Right Hand' : 'Left Hand'}
               </span>
             </button>
@@ -226,7 +226,7 @@ export function ConfigScreen({ onNavigate }: ConfigScreenProps) {
       {/* Start Session button */}
       <button
         onClick={() => onNavigate('practice')}
-        className="ornate-button mt-12 px-20 py-5 text-xl tracking-[0.25em]"
+        className="ornate-button mt-8 sm:mt-12 px-12 sm:px-20 py-4 sm:py-5 text-base sm:text-xl tracking-[0.25em]"
       >
         START SESSION
       </button>
