@@ -1,9 +1,10 @@
 interface LyreIconProps {
   className?: string
   size?: number
+  style?: React.CSSProperties
 }
 
-export function LyreIcon({ className = '', size = 48 }: LyreIconProps) {
+export function LyreIcon({ className = '', size = 48, style }: LyreIconProps) {
   return (
     <svg
       width={size}
@@ -11,6 +12,7 @@ export function LyreIcon({ className = '', size = 48 }: LyreIconProps) {
       viewBox="0 0 64 64"
       fill="none"
       className={className}
+      style={style}
     >
       {/* Base/Crossbar */}
       <ellipse cx="32" cy="52" rx="14" ry="4" fill="currentColor" opacity="0.8" />
