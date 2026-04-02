@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "description": "Browser-based MIDI piano practice app with real-time scoring and sheet music rendering",
   "license": "MIT",
-  "author": "Rodolpho Macedo",
+  "author": "grabatus.com",
   "type": "module",
   "scripts": {
     "dev": "vite",

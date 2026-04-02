@@ -62,7 +62,6 @@ export function PracticeScreen({
   const handleComplete = useCallback(() => {
     isPlayingRef.current = false
     const scoreResult = evaluatePerformance(pendingExpectedRef.current, playedNotesRef.current)
-
     const hits = new Set<string>()
     const misses = new Set<string>()
     const matched = new Set<number>()
@@ -84,7 +83,6 @@ export function PracticeScreen({
     }
     setHitNotes(hits)
     setMissNotes(misses)
-
     setTimeout(() => onFinish(scoreResult), 1500)
   }, [score, onFinish])
 
@@ -96,7 +94,6 @@ export function PracticeScreen({
     if (!lastNoteOn || !isPlayingRef.current) return
     const timestamp = performance.now() - startTimeRef.current
     playedNotesRef.current.push({ pitch: lastNoteOn.note, timestamp })
-
     const matchedExp = pendingExpectedRef.current.find(
       exp => vexFlowToMidi(exp.pitch) === lastNoteOn.note && Math.abs(timestamp - exp.beatMs) < MAX_WINDOW_MS,
     )
@@ -128,77 +125,126 @@ export function PracticeScreen({
   }, [reset])
 
   return (
-    <div className="practice-screen">
-      <OrnateFrame variant="full" className="absolute inset-0 pointer-events-none z-40" />
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#100e08', overflow: 'hidden' }}>
 
-      {/* ── Header ── */}
-      <div className="practice-header">
-        <button onClick={onBack} className="practice-back-btn group">
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          <span>Home</span>
-        </button>
+      {/* ══ TOP SECTION — ornate frame + title + score + controls ══ */}
+      <div style={{ flex: '1 1 0', minHeight: 0, position: 'relative', display: 'flex', flexDirection: 'column' }}>
 
-        <div className="practice-title-block">
-          <span className="practice-title">Debussy</span>
-          <span className="practice-subtitle">
-            {score.title} · {score.composer} · {bpm} BPM
-          </span>
+        {/* Ornate corner frame — decorates this section only */}
+        <OrnateFrame variant="full" className="absolute inset-0 pointer-events-none z-20" />
+
+        {/* Title row */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '8px 20px', flexShrink: 0, position: 'relative', zIndex: 25,
+        }}>
+          <button onClick={onBack} style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            color: '#A07828', fontFamily: 'var(--font-serif)', fontSize: 12,
+            letterSpacing: '0.1em', cursor: 'pointer', background: 'none', border: 'none',
+          }}>
+            <ArrowLeft size={14} />
+            <span>Home</span>
+          </button>
+
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+            <span style={{
+              fontFamily: 'var(--font-elegant)', fontSize: 20, fontStyle: 'italic',
+              letterSpacing: '0.12em',
+              background: 'linear-gradient(to bottom, #e8c87a, #c9a84c, #a07828, #c9a84c)',
+              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+            }}>Debussy</span>
+            <span style={{ fontFamily: 'var(--font-serif)', fontSize: 9, color: '#8a6520', letterSpacing: '0.15em', fontStyle: 'italic' }}>
+              {score.title} · {score.composer} · {bpm} BPM
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', gap: 12, fontFamily: 'var(--font-serif)', fontSize: 13 }}>
+            <span style={{ color: '#6dbf8a' }}>✓ {stats.correct}</span>
+            <span style={{ color: '#bf6d6d' }}>✗ {stats.wrong}</span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-4 text-base font-serif">
-          <span style={{ color: '#6dbf8a' }}>✓ {stats.correct}</span>
-          <span className="text-gold/20">·</span>
-          <span style={{ color: '#bf6d6d' }}>✗ {stats.wrong}</span>
-        </div>
-      </div>
-
-      {/* ── Sheet music ── */}
-      <div className="practice-score-area">
-        <div className="practice-score-inner">
-          <ScoreRenderer
-            score={score}
-            cursorBeat={isPlaying ? currentBeat : undefined}
-            hitNotes={hitNotes.size > 0 ? hitNotes : undefined}
-            missNotes={missNotes.size > 0 ? missNotes : undefined}
-            darkMode
-          />
-        </div>
-
-        {/* Progress bar — overlaid at bottom of score area */}
-        {isPlaying && (
-          <div className="practice-progress-track">
-            <motion.div
-              className="practice-progress-fill"
-              style={{ width: `${progress * 100}%` }}
-              transition={{ duration: 0.1 }}
+        {/* Score area — fills remaining top section height */}
+        <div style={{
+          flex: '1 1 0', minHeight: 0, margin: '0 16px',
+          position: 'relative', zIndex: 10,
+          background: 'linear-gradient(to bottom, #1e1a10, #141008, #1a160e)',
+          border: '1.5px solid rgba(160,120,38,0.3)',
+          borderRadius: 3,
+          boxShadow: 'inset 0 0 40px rgba(0,0,0,0.5)',
+          overflowX: 'auto', overflowY: 'hidden',
+        }}>
+          <div style={{ padding: '12px 20px' }}>
+            <ScoreRenderer
+              score={score}
+              cursorBeat={isPlaying ? currentBeat : undefined}
+              hitNotes={hitNotes.size > 0 ? hitNotes : undefined}
+              missNotes={missNotes.size > 0 ? missNotes : undefined}
+              darkMode
             />
           </div>
-        )}
+
+          {/* Progress bar at bottom of score */}
+          {isPlaying && (
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, background: 'rgba(0,0,0,0.5)' }}>
+              <motion.div
+                style={{
+                  height: '100%', width: `${progress * 100}%`,
+                  background: 'linear-gradient(to right, #6b4e18, #c9a84c, #e8c87a)',
+                }}
+                transition={{ duration: 0.1 }}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Controls row */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '6px 24px', flexShrink: 0, position: 'relative', zIndex: 25,
+        }}>
+          <LyreIcon size={26} style={{ color: 'rgba(160,120,38,0.25)' }} />
+
+          {/* Play / Pause */}
+          <button
+            onClick={isPlaying ? () => { stop(); isPlayingRef.current = false } : handleStart}
+            style={{
+              width: 50, height: 50, borderRadius: '50%',
+              background: 'linear-gradient(135deg, #e8c87a, #c9a84c, #a07828, #c9a84c)',
+              padding: 2, cursor: 'pointer', border: 'none',
+              boxShadow: '0 4px 14px rgba(0,0,0,0.7), 0 0 0 1px rgba(100,75,20,0.4)',
+            }}
+          >
+            <div style={{
+              width: '100%', height: '100%', borderRadius: '50%',
+              background: 'linear-gradient(135deg, #1e1408, #0e0c06)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#c9a84c',
+            }}>
+              {isPlaying
+                ? <Pause style={{ width: 22, height: 22 }} className="fill-current" />
+                : <Play style={{ width: 22, height: 22, marginLeft: 2 }} className="fill-current" />}
+            </div>
+          </button>
+
+          <button
+            onClick={handleReset}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              padding: '5px 14px', fontFamily: 'var(--font-serif)', fontSize: 11,
+              letterSpacing: '0.14em', color: '#8a6520', cursor: 'pointer',
+              background: 'transparent', border: '1px solid rgba(160,120,38,0.25)', borderRadius: 2,
+            }}
+          >
+            <RotateCcw size={12} />
+            <span>Reset</span>
+          </button>
+        </div>
       </div>
 
-      {/* ── Controls ── */}
-      <div className="practice-controls">
-        <LyreIcon size={28} className="text-gold/20 shrink-0" />
-
-        <button
-          onClick={isPlaying ? () => { stop(); isPlayingRef.current = false } : handleStart}
-          className="practice-play-btn group"
-        >
-          <div className="practice-play-inner">
-            {isPlaying
-              ? <Pause className="w-7 h-7 fill-current" />
-              : <Play className="w-7 h-7 fill-current ml-0.5" />}
-          </div>
-        </button>
-
-        <button onClick={handleReset} className="practice-reset-btn">
-          <RotateCcw className="w-3.5 h-3.5" />
-          <span>Reset</span>
-        </button>
-      </div>
-
-      {/* ── Piano keyboard — occupies the bottom 40% ── */}
-      <div className="practice-keyboard">
+      {/* ══ PIANO KEYBOARD — fixed height, same as previous version ══ */}
+      <div style={{ height: 208, flexShrink: 0, position: 'relative', zIndex: 30 }}>
         <PianoKeyboard activeKeys={pressedNotes} />
       </div>
     </div>

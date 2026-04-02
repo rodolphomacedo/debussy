@@ -122,4 +122,4 @@ Firefox and Safari do not support Web MIDI API natively.
 
 ## License
 
-[MIT](LICENSE) — Rodolpho Macedo
+[MIT](LICENSE) — grabatus.com
