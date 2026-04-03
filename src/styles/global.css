@@ -80,6 +80,22 @@
     0 0 0 6px rgba(212,175,55,0.3);
 }
 
+/* ── Composer screen inputs ── */
+.composer-input {
+  @apply bg-black/50 border border-gold/20 text-gold/80 font-serif text-sm px-3 py-2 transition-colors;
+  outline: none;
+}
+.composer-input:focus {
+  border-color: rgba(212, 175, 55, 0.5);
+  box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.15);
+}
+.composer-input::placeholder {
+  @apply text-gold/20;
+}
+.composer-input option {
+  background: #1a1408;
+}
+
 /* ── Ornate button ── */
 .ornate-button {
   @apply relative px-10 py-4 font-serif text-xl transition-all duration-500 uppercase tracking-widest cursor-pointer;

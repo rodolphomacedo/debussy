@@ -4,6 +4,7 @@ import { ModeCard } from './ModeCard'
 import { BookMusicIcon } from './icons/BookMusicIcon'
 import { QuillInkwellIcon } from './icons/QuillInkwellIcon'
 import { EarMusicIcon } from './icons/EarMusicIcon'
+import { StaffPenIcon } from './icons/StaffPenIcon'
 import { useAppStore, type Screen } from '../store/useAppStore'
 
 interface HomeScreenProps {
@@ -44,12 +45,18 @@ const MODE_CARDS: ModeCardConfig[] = [
     icon: EarMusicIcon,
   },
   {
+    title: 'Compose Score',
+    description: 'Write your own sheet music and practice it.',
+    ctaLabel: 'OPEN COMPOSER',
+    screen: 'composer',
+    icon: StaffPenIcon,
+  },
+  {
     title: 'Capture Notes',
     description: 'Record and transcribe your playing.',
     ctaLabel: 'START RECORDING',
     screen: 'capture',
     icon: QuillInkwellIcon,
-    className: 'sm:col-span-2 lg:col-span-1',
   },
 ]
 
@@ -70,7 +77,7 @@ export function HomeScreen({ onNavigate, isConnected, deviceName }: HomeScreenPr
 
       <div className="flex-1 flex flex-col gap-4 sm:gap-6 lg:gap-8 max-w-6xl mx-auto w-full px-4 py-4 sm:px-6 sm:py-5 lg:px-8 lg:py-6 relative z-10 overflow-y-auto custom-scrollbar">
         {/* Mode cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-6">
           {MODE_CARDS.map(card => (
             <ModeCard
               key={card.screen}

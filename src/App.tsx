@@ -5,6 +5,7 @@ import { HomeScreen } from './components/HomeScreen'
 import { PracticeScreen } from './components/PracticeScreen'
 import { ResultsScreen } from './components/ResultsScreen'
 import { CaptureScreen } from './components/CaptureScreen'
+import { ComposerScreen } from './components/ComposerScreen'
 import { SelectionScreen } from './components/SelectionScreen'
 import { ConfigScreen } from './components/ConfigScreen'
 import { SettingsPanel } from './components/SettingsPanel'
@@ -177,6 +178,22 @@ function App() {
               lastNoteOn={lastNoteOn}
               bpm={bpm}
               onBack={() => navigate('home')}
+            />
+          </motion.div>
+        )}
+
+        {screen === 'composer' && (
+          <motion.div
+            key="composer"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="w-full h-full"
+          >
+            <ComposerScreen
+              onNavigate={navigate}
+              isConnected={isConnected}
+              deviceName={deviceName}
             />
           </motion.div>
         )}
