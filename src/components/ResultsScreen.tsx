@@ -82,27 +82,27 @@ export function ResultsScreen({ result, onHome, onRetry }: ResultsScreenProps) {
       />
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col items-start px-4 sm:px-8 lg:px-12 py-4 sm:py-8 relative z-10 overflow-y-auto custom-scrollbar max-w-4xl">
+      <div className="flex-1 w-full flex flex-col items-start px-4 sm:px-8 lg:px-12 py-4 sm:py-8 relative z-10 overflow-y-auto custom-scrollbar max-w-4xl">
         {/* Grade circle */}
         <motion.div
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.8, type: 'spring' }}
-          className="flex items-center justify-center mx-auto mb-4 sm:mb-8"
+          className="flex items-center justify-center mx-auto mb-3 sm:mb-8"
         >
-          <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-gradient-to-br from-black/80 to-black/95 border-4 border-gold/50 flex items-center justify-center shadow-[0_10px_40px_rgba(0,0,0,0.8),0_0_30px_rgba(212,175,55,0.2)]">
-            <span className="text-4xl sm:text-6xl font-elegant metallic-gold italic">{result.grade}</span>
+          <div className="w-16 h-16 sm:w-28 sm:h-28 rounded-full bg-gradient-to-br from-black/80 to-black/95 border-4 border-gold/50 flex items-center justify-center shadow-[0_10px_40px_rgba(0,0,0,0.8),0_0_30px_rgba(212,175,55,0.2)]">
+            <span className="text-3xl sm:text-6xl font-elegant metallic-gold italic">{result.grade}</span>
           </div>
         </motion.div>
 
         {/* Session Statistics heading */}
-        <div className="w-full mb-4 sm:mb-6">
-          <h2 className="text-xl sm:text-2xl font-serif metallic-gold tracking-wider text-center mb-2">
+        <div className="w-full mb-2 sm:mb-6">
+          <h2 className="text-base sm:text-2xl font-serif metallic-gold tracking-wider text-center mb-1 sm:mb-2">
             Session Statistics
           </h2>
           <div className="flex items-center justify-center gap-3">
             <div className="h-[1px] w-12 sm:w-20 bg-gradient-to-r from-transparent to-gold/40" />
-            <span className="text-gold/30 text-sm">&#10086;</span>
+            <span className="text-gold/30 text-xs sm:text-sm">&#10086;</span>
             <div className="h-[1px] w-12 sm:w-20 bg-gradient-to-l from-transparent to-gold/40" />
           </div>
         </div>
@@ -112,7 +112,7 @@ export function ResultsScreen({ result, onHome, onRetry }: ResultsScreenProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="w-full border-collapse mb-6 sm:mb-8"
+          className="w-full border-collapse mb-3 sm:mb-8"
         >
           <thead>
             <tr className="border-b-2 border-gold/30">
@@ -143,9 +143,9 @@ export function ResultsScreen({ result, onHome, onRetry }: ResultsScreenProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
-          className="w-full mb-6 sm:mb-8"
+          className="w-full mb-3 sm:mb-8"
         >
-          <h3 className="text-base sm:text-lg font-serif metallic-gold tracking-wider mb-3 sm:mb-4">
+          <h3 className="text-sm sm:text-lg font-serif metallic-gold tracking-wider mb-2 sm:mb-4">
             Performance Consistency
           </h3>
           <div className="relative">
@@ -201,19 +201,20 @@ export function ResultsScreen({ result, onHome, onRetry }: ResultsScreenProps) {
           </div>
         </motion.div>
 
-        {/* Action buttons — stacked on mobile, horizontal on tablet+ */}
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 w-full">
-          <button onClick={onRetry} className="flex-1 ornate-button flex items-center justify-center gap-2 sm:gap-3 py-3 sm:py-4 text-sm sm:text-base tracking-[0.15em]">
-            <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" />
-            Try Again
+        {/* Action buttons — always horizontal */}
+        <div className="flex flex-row gap-2 sm:gap-6 w-full pb-4 sm:pb-0">
+          <button onClick={onRetry} className="flex-1 ornate-button flex items-center justify-center gap-1 sm:gap-3">
+            <RotateCcw className="w-3 h-3 sm:w-5 sm:h-5 shrink-0" />
+            <span>Try Again</span>
           </button>
-          <button onClick={() => navigate('config')} className="flex-1 ornate-button flex items-center justify-center gap-2 sm:gap-3 py-3 sm:py-4 text-sm sm:text-base tracking-[0.15em]">
-            <Settings2 className="w-4 h-4 sm:w-5 sm:h-5" />
-            Change BPM
+          <button onClick={() => navigate('config')} className="flex-1 ornate-button flex items-center justify-center gap-1 sm:gap-3">
+            <Settings2 className="w-3 h-3 sm:w-5 sm:h-5 shrink-0" />
+            <span className="hidden sm:inline">Change BPM</span>
+            <span className="sm:hidden">BPM</span>
           </button>
-          <button onClick={onHome} className="flex-1 ornate-button flex items-center justify-center gap-2 sm:gap-3 py-3 sm:py-4 text-sm sm:text-base tracking-[0.15em]">
-            <Home className="w-4 h-4 sm:w-5 sm:h-5" />
-            Home
+          <button onClick={onHome} className="flex-1 ornate-button flex items-center justify-center gap-1 sm:gap-3">
+            <Home className="w-3 h-3 sm:w-5 sm:h-5 shrink-0" />
+            <span>Home</span>
           </button>
         </div>
       </div>

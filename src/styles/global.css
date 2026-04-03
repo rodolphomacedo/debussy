@@ -1176,6 +1176,17 @@ input[type="range"].gold-slider::-webkit-slider-thumb {
 
 /* ── Practice responsive: mobile ── */
 @media (max-width: 639px) {
+  /* Compact ornate button on mobile */
+  .ornate-button {
+    padding: 8px 16px;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+  }
+  .ornate-button::before,
+  .ornate-button::after {
+    display: none;
+  }
+
   .practice-keyboard {
     height: clamp(110px, 22vh, 170px);
   }
