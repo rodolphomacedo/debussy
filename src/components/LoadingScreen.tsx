@@ -38,7 +38,12 @@ export function LoadingScreen({ onComplete }: LoadingScreenProps) {
 
   const handleStart = useCallback(async () => {
     setAudioLoading(true)
-    await initAudio()
+    const timeout = new Promise<void>(res => setTimeout(res, 8000))
+    try {
+      await Promise.race([initAudio(), timeout])
+    } catch {
+      // Audio init failed (network error, CDN down) — proceed without audio
+    }
     onComplete()
   }, [onComplete])
 
