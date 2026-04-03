@@ -3,11 +3,6 @@ import userEvent from '@testing-library/user-event'
 import { HomeScreen } from './HomeScreen'
 import type { Screen } from '../store/useAppStore'
 
-// Mock heavy child components that rely on canvas/audio
-vi.mock('./PianoKeyboard', () => ({
-  PianoKeyboard: () => <div data-testid="piano-keyboard" />,
-}))
-
 vi.mock('./NavBar', () => ({
   NavBar: () => <nav data-testid="navbar" />,
 }))
@@ -16,11 +11,20 @@ vi.mock('./OrnateFrame', () => ({
   OrnateFrame: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }))
 
+vi.mock('./ModeCard', () => ({
+  ModeCard: ({ title, description, ctaLabel, onClick }: { title: string; description: string; ctaLabel: string; onClick: () => void }) => (
+    <div onClick={onClick}>
+      <span>{title}</span>
+      <span>{description}</span>
+      <span>{ctaLabel}</span>
+    </div>
+  ),
+}))
+
 const defaultProps = {
   onNavigate: vi.fn(),
   isConnected: false,
   deviceName: null,
-  pressedNotes: new Set<number>(),
 }
 
 describe('HomeScreen', () => {

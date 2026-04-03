@@ -97,7 +97,6 @@ function App() {
               onNavigate={navigate}
               isConnected={isConnected}
               deviceName={deviceName}
-              pressedNotes={pressedNotes}
             />
           </motion.div>
         )}

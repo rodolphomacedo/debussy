@@ -1,8 +1,6 @@
-import { motion } from 'motion/react'
-import { ChevronRight } from 'lucide-react'
-import { PianoKeyboard } from './PianoKeyboard'
 import { NavBar } from './NavBar'
 import { OrnateFrame } from './OrnateFrame'
+import { ModeCard } from './ModeCard'
 import { BookMusicIcon } from './icons/BookMusicIcon'
 import { QuillInkwellIcon } from './icons/QuillInkwellIcon'
 import { EarMusicIcon } from './icons/EarMusicIcon'
@@ -12,7 +10,6 @@ interface HomeScreenProps {
   onNavigate: (screen: Screen) => void
   isConnected: boolean
   deviceName: string | null
-  pressedNotes: Set<number>
 }
 
 const RECENT_SESSIONS = [
@@ -22,14 +19,47 @@ const RECENT_SESSIONS = [
   { date: 'Oct 18', title: "Children's Corner", grade: 'A' },
 ]
 
-export function HomeScreen({ onNavigate, isConnected, deviceName, pressedNotes }: HomeScreenProps) {
+interface ModeCardConfig {
+  title: string
+  description: string
+  ctaLabel: string
+  screen: Screen
+  icon: (props: { size: number; className: string }) => React.ReactNode
+  className?: string
+}
+
+const MODE_CARDS: ModeCardConfig[] = [
+  {
+    title: 'Practice Sheet Music',
+    description: 'Browse library or continue learning.',
+    ctaLabel: 'OPEN LIBRARY',
+    screen: 'practice',
+    icon: BookMusicIcon,
+  },
+  {
+    title: 'Play by Ear',
+    description: 'Listen, learn, and reproduce melodies by ear.',
+    ctaLabel: 'START LISTENING',
+    screen: 'ear-training',
+    icon: EarMusicIcon,
+  },
+  {
+    title: 'Capture Notes',
+    description: 'Record and transcribe your playing.',
+    ctaLabel: 'START RECORDING',
+    screen: 'capture',
+    icon: QuillInkwellIcon,
+    className: 'sm:col-span-2 lg:col-span-1',
+  },
+]
+
+export function HomeScreen({ onNavigate, isConnected, deviceName }: HomeScreenProps) {
   const setSettingsOpen = useAppStore(s => s.setSettingsOpen)
 
   return (
     <div className="h-full flex flex-col overflow-hidden relative">
       <div className="leather-texture" />
 
-      {/* NavBar */}
       <NavBar
         currentScreen="home"
         onNavigate={onNavigate}
@@ -38,90 +68,25 @@ export function HomeScreen({ onNavigate, isConnected, deviceName, pressedNotes }
         onSettingsOpen={() => setSettingsOpen(true)}
       />
 
-      {/* Main content */}
       <div className="flex-1 flex flex-col gap-4 sm:gap-6 lg:gap-8 max-w-6xl mx-auto w-full px-4 py-4 sm:px-6 sm:py-5 lg:px-8 lg:py-6 relative z-10 overflow-y-auto custom-scrollbar">
         {/* Mode cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-10">
-          {/* Practice card */}
-          <motion.div
-            whileHover={{ y: -6, scale: 1.01 }}
-            onClick={() => onNavigate('practice')}
-            className="ornate-card p-5 sm:p-7 lg:p-10 flex flex-col items-center text-center gap-4 sm:gap-6 group"
-          >
-            <OrnateFrame variant="card">
-              <div className="flex flex-col items-center gap-4 sm:gap-6 p-2 sm:p-4">
-                <h2 className="text-lg sm:text-xl lg:text-2xl font-serif metallic-gold tracking-wider">
-                  Practice Sheet Music
-                </h2>
-
-                <BookMusicIcon size={48} className="sm:hidden text-gold/70 group-hover:text-gold transition-colors duration-500" />
-                <BookMusicIcon size={72} className="hidden sm:block text-gold/70 group-hover:text-gold transition-colors duration-500" />
-
-                <p className="text-gold/50 italic text-xs sm:text-sm max-w-xs leading-relaxed">
-                  Browse library or continue learning.
-                </p>
-
-                <div className="flex items-center gap-3 text-gold-light font-serif border-b-2 border-gold/20 pb-2 group-hover:border-gold transition-all duration-500 tracking-[0.2em] text-[10px] sm:text-xs uppercase">
-                  <span>OPEN LIBRARY</span>
-                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </div>
-            </OrnateFrame>
-          </motion.div>
-
-          {/* Ear Training card */}
-          <motion.div
-            whileHover={{ y: -6, scale: 1.01 }}
-            onClick={() => onNavigate('ear-training')}
-            className="ornate-card p-5 sm:p-7 lg:p-10 flex flex-col items-center text-center gap-4 sm:gap-6 group"
-          >
-            <OrnateFrame variant="card">
-              <div className="flex flex-col items-center gap-4 sm:gap-6 p-2 sm:p-4">
-                <h2 className="text-lg sm:text-xl lg:text-2xl font-serif metallic-gold tracking-wider">
-                  Play by Ear
-                </h2>
-
-                <EarMusicIcon size={48} className="sm:hidden text-gold/70 group-hover:text-gold transition-colors duration-500" />
-                <EarMusicIcon size={72} className="hidden sm:block text-gold/70 group-hover:text-gold transition-colors duration-500" />
-
-                <p className="text-gold/50 italic text-xs sm:text-sm max-w-xs leading-relaxed">
-                  Listen, learn, and reproduce melodies by ear.
-                </p>
-
-                <div className="flex items-center gap-3 text-gold-light font-serif border-b-2 border-gold/20 pb-2 group-hover:border-gold transition-all duration-500 tracking-[0.2em] text-[10px] sm:text-xs uppercase">
-                  <span>START LISTENING</span>
-                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </div>
-            </OrnateFrame>
-          </motion.div>
-
-          {/* Capture card */}
-          <motion.div
-            whileHover={{ y: -6, scale: 1.01 }}
-            onClick={() => onNavigate('capture')}
-            className="ornate-card p-5 sm:p-7 lg:p-10 flex flex-col items-center text-center gap-4 sm:gap-6 group sm:col-span-2 lg:col-span-1"
-          >
-            <OrnateFrame variant="card">
-              <div className="flex flex-col items-center gap-4 sm:gap-6 p-2 sm:p-4">
-                <h2 className="text-lg sm:text-xl lg:text-2xl font-serif metallic-gold tracking-wider">
-                  Capture Notes
-                </h2>
-
-                <QuillInkwellIcon size={48} className="sm:hidden text-gold/70 group-hover:text-gold transition-colors duration-500" />
-                <QuillInkwellIcon size={72} className="hidden sm:block text-gold/70 group-hover:text-gold transition-colors duration-500" />
-
-                <p className="text-gold/50 italic text-xs sm:text-sm max-w-xs leading-relaxed">
-                  Record and transcribe your playing.
-                </p>
-
-                <div className="flex items-center gap-3 text-gold-light font-serif border-b-2 border-gold/20 pb-2 group-hover:border-gold transition-all duration-500 tracking-[0.2em] text-[10px] sm:text-xs uppercase">
-                  <span>START RECORDING</span>
-                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </div>
-            </OrnateFrame>
-          </motion.div>
+          {MODE_CARDS.map(card => (
+            <ModeCard
+              key={card.screen}
+              title={card.title}
+              description={card.description}
+              ctaLabel={card.ctaLabel}
+              onClick={() => onNavigate(card.screen)}
+              className={card.className}
+              icon={
+                <>
+                  <card.icon size={48} className="sm:hidden text-gold/70 group-hover:text-gold transition-colors duration-500" />
+                  <card.icon size={72} className="hidden sm:block text-gold/70 group-hover:text-gold transition-colors duration-500" />
+                </>
+              }
+            />
+          ))}
         </div>
 
         {/* Recent Sessions */}
@@ -146,11 +111,6 @@ export function HomeScreen({ onNavigate, isConnected, deviceName, pressedNotes }
             </div>
           </OrnateFrame>
         </div>
-      </div>
-
-      {/* Bottom piano keyboard */}
-      <div className="h-32 sm:h-36 lg:h-44 mt-auto relative z-20">
-        <PianoKeyboard activeKeys={pressedNotes} />
       </div>
     </div>
   )

@@ -6,7 +6,7 @@ interface OrnateFrameProps {
   children?: ReactNode
 }
 
-function CornerOrnament({ position }: { position: 'tl' | 'tr' | 'bl' | 'br' }) {
+function CornerOrnament({ position, offset = 0 }: { position: 'tl' | 'tr' | 'bl' | 'br'; offset?: number }) {
   const transforms: Record<string, string> = {
     tl: '',
     tr: 'scale(-1, 1)',
@@ -14,15 +14,18 @@ function CornerOrnament({ position }: { position: 'tl' | 'tr' | 'bl' | 'br' }) {
     br: 'scale(-1, -1)',
   }
 
-  const posClasses: Record<string, string> = {
-    tl: 'top-0 left-0',
-    tr: 'top-0 right-0',
-    bl: 'bottom-0 left-0',
-    br: 'bottom-0 right-0',
+  const offsetStyle: Record<string, React.CSSProperties> = {
+    tl: { top: -offset, left: -offset },
+    tr: { top: -offset, right: -offset },
+    bl: { bottom: -offset, left: -offset },
+    br: { bottom: -offset, right: -offset },
   }
 
   return (
-    <div className={`absolute ${posClasses[position]} pointer-events-none select-none z-30`}>
+    <div
+      className={`absolute pointer-events-none select-none z-30`}
+      style={offsetStyle[position]}
+    >
       <svg
         width="80"
         height="80"
@@ -90,12 +93,14 @@ export function OrnateFrame({ variant = 'card', className = '', children }: Orna
     panel: '',
   }
 
+  const offset = variant === 'card' ? 20 : 0
+
   return (
     <div className={`relative text-gold ${sizeMap[variant]} ${className}`}>
-      <CornerOrnament position="tl" />
-      <CornerOrnament position="tr" />
-      <CornerOrnament position="bl" />
-      <CornerOrnament position="br" />
+      <CornerOrnament position="tl" offset={offset} />
+      <CornerOrnament position="tr" offset={offset} />
+      <CornerOrnament position="bl" offset={offset} />
+      <CornerOrnament position="br" offset={offset} />
       {children}
     </div>
   )

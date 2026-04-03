@@ -393,7 +393,7 @@
   pointer-events: none;
 }
 
-/* ── White key PRESSED state — candlelight backglow ── */
+/* ── White key PRESSED state — ivory key with aged gold glow ── */
 .piano-white-key.pressed::before {
   background:
     linear-gradient(to bottom,
@@ -403,9 +403,10 @@
       #cec395 100%
     );
   box-shadow:
-    /* Warm candlelight glow from behind */
-    0 0 18px rgba(220, 180, 70, 0.35),
-    0 0 6px rgba(200, 160, 50, 0.25),
+    /* Aged gold glow radiating outward */
+    0 0 24px rgba(212, 175, 55, 0.55),
+    0 0 10px rgba(200, 160, 50, 0.4),
+    0 0 40px rgba(180, 140, 40, 0.2),
     /* Inset shadow for physical depression */
     inset 0 3px 10px rgba(0, 0, 0, 0.15),
     inset 0 -1px 3px rgba(0, 0, 0, 0.04),
@@ -420,19 +421,19 @@
   background: linear-gradient(to bottom, #c0b48a, #a89870);
 }
 
-/* Candlelight underglow for pressed white keys */
+/* Aged gold underglow for pressed white keys */
 .piano-white-key.pressed::after {
   content: '';
   position: absolute;
-  bottom: -8px;
-  left: 10%;
-  right: 10%;
-  height: 12px;
+  bottom: -10px;
+  left: 5%;
+  right: 5%;
+  height: 16px;
   z-index: 0;
   pointer-events: none;
   border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(220, 180, 70, 0.4) 0%, transparent 70%);
-  filter: blur(4px);
+  background: radial-gradient(ellipse, rgba(212, 175, 55, 0.6) 0%, rgba(180, 140, 40, 0.3) 40%, transparent 70%);
+  filter: blur(5px);
 }
 
 /* ── White key GUIDE state — golden glow for practice mode ── */
@@ -553,7 +554,7 @@
   border-radius: 0 0 3px 0;
 }
 
-/* ── Black key PRESSED state — candlelight glow ── */
+/* ── Black key PRESSED state — black key with aged gold glow ── */
 .piano-black-key.pressed {
   background:
     linear-gradient(to bottom,
@@ -564,27 +565,28 @@
       #050505 100%
     );
   box-shadow:
-    /* Warm candlelight backglow */
-    0 0 14px rgba(210, 170, 60, 0.3),
-    0 0 5px rgba(190, 150, 40, 0.2),
+    /* Aged gold glow radiating outward */
+    0 0 20px rgba(212, 175, 55, 0.5),
+    0 0 8px rgba(200, 160, 50, 0.35),
+    0 0 35px rgba(180, 140, 40, 0.2),
     /* Reduced shadow — key is depressed */
     inset 0 2px 6px rgba(0, 0, 0, 0.7),
     0 2px 4px rgba(0, 0, 0, 0.5);
   transform: translateY(3px);
 }
 
-/* Candlelight underglow for pressed black keys */
+/* Aged gold underglow for pressed black keys */
 .black-key-glow {
   position: absolute;
-  bottom: -8px;
-  left: 5%;
-  right: 5%;
-  height: 12px;
+  bottom: -10px;
+  left: 0%;
+  right: 0%;
+  height: 16px;
   pointer-events: none;
   z-index: -1;
   border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(220, 180, 70, 0.45) 0%, transparent 70%);
-  filter: blur(4px);
+  background: radial-gradient(ellipse, rgba(212, 175, 55, 0.6) 0%, rgba(180, 140, 40, 0.3) 40%, transparent 70%);
+  filter: blur(5px);
 }
 
 /* ── Black key GUIDE glow ── */
@@ -926,13 +928,7 @@ input[type="range"].gold-slider::-webkit-slider-thumb {
     0 0 0 3px var(--aged-gold-ghost);
 }
 
-.practice-score-inner {
-  width: 100%;
-  height: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding: 10px 20px;
-}
+/* NOTE: canonical .practice-score-inner is in the responsive section below */
 
 /* Gold CSS override for VexFlow SVG */
 .practice-score-area .score-renderer svg path,
@@ -1030,10 +1026,10 @@ input[type="range"].gold-slider::-webkit-slider-thumb {
   color: var(--aged-gold-bright);
 }
 
-/* ── Piano keyboard — ~40% of screen ── */
+/* ── Piano keyboard — generous height ── */
 .practice-keyboard {
   flex-shrink: 0;
-  height: clamp(220px, 40vh, 320px);
+  height: clamp(150px, 26vh, 240px);
   position: relative;
   z-index: 20;
 }
@@ -1057,16 +1053,21 @@ input[type="range"].gold-slider::-webkit-slider-thumb {
   position: relative;
   display: flex;
   flex-direction: column;
+  background: linear-gradient(to bottom, #1e1a10, #141008, #1a160e);
+  border-bottom: 1px solid rgba(160, 120, 38, 0.25);
 }
 
 .practice-title-row {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 12px;
-  flex-shrink: 0;
-  position: relative;
+  padding: 6px 16px;
   z-index: 25;
+  background: linear-gradient(to bottom, rgba(20,16,8,0.85) 0%, transparent 100%);
 }
 
 .practice-title-center {
@@ -1103,31 +1104,36 @@ input[type="range"].gold-slider::-webkit-slider-thumb {
 }
 
 .practice-score-box {
-  flex: 1 1 0;
-  min-height: 0;
-  margin: 0 8px;
-  position: relative;
+  position: absolute;
+  inset: 0;
   z-index: 10;
-  background: linear-gradient(to bottom, #1e1a10, #141008, #1a160e);
-  border: 1.5px solid rgba(160,120,38,0.3);
-  border-radius: 3px;
-  box-shadow: inset 0 0 40px rgba(0,0,0,0.5);
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.practice-score-box::-webkit-scrollbar {
+  display: none;
 }
 
 .practice-score-inner {
-  padding: 8px 12px;
+  width: 100%;
+  padding: 40px 24px 48px;
 }
 
 .practice-controls-row {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 12px;
-  flex-shrink: 0;
-  position: relative;
+  padding: 6px 16px;
   z-index: 25;
+  background: linear-gradient(to top, rgba(20,16,8,0.85) 0%, transparent 100%);
 }
 
 .practice-play-icon {
@@ -1164,14 +1170,14 @@ input[type="range"].gold-slider::-webkit-slider-thumb {
     height: 22px;
   }
   .practice-keyboard {
-    height: clamp(220px, 40vh, 320px);
+    height: clamp(150px, 26vh, 240px);
   }
 }
 
 /* ── Practice responsive: mobile ── */
 @media (max-width: 639px) {
   .practice-keyboard {
-    height: 140px;
+    height: 200px;
   }
   .practice-play-btn {
     width: 42px;
