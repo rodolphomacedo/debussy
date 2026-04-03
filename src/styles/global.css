@@ -1187,20 +1187,27 @@ input[type="range"].gold-slider::-webkit-slider-thumb {
     padding: 4px 10px;
     font-size: 10px;
   }
+  /* Keep title/controls away from 50px corner ornament area */
   .practice-title-row {
-    padding: 8px 14px;
+    padding: 10px 56px;
   }
   .practice-logo-text {
-    font-size: 18px;
+    font-size: 17px;
   }
   .practice-subtitle-text {
     font-size: 9px;
   }
   .practice-controls-row {
-    padding: 8px 14px;
+    padding: 10px 56px;
   }
+  /* Extra left padding so brace/clef are not clipped */
   .practice-score-inner {
-    padding: 44px 16px 52px;
+    padding: 48px 12px 56px;
+  }
+  /* Scale ornaments down to 50px on mobile */
+  .corner-ornament svg {
+    width: 50px;
+    height: 50px;
   }
 }
 

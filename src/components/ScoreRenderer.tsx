@@ -10,7 +10,7 @@ import { buildMeasureNotes } from '../lib/scoreBuilder'
 import type { ScoreData } from '../lib/demoScore'
 
 const STAVE_WIDTH = 300
-const STAVE_PADDING = 10
+const STAVE_PADDING = 30
 const TREBLE_Y = 40
 const BASS_Y = 150
 const FIRST_STAVE_EXTRA = 60

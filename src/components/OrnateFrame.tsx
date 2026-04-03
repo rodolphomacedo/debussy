@@ -23,7 +23,7 @@ function CornerOrnament({ position, offset = 0 }: { position: 'tl' | 'tr' | 'bl'
 
   return (
     <div
-      className={`absolute pointer-events-none select-none z-30`}
+      className={`corner-ornament absolute pointer-events-none select-none z-30`}
       style={offsetStyle[position]}
     >
       <svg
