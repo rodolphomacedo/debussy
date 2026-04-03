@@ -93,7 +93,7 @@ export function OrnateFrame({ variant = 'card', className = '', children }: Orna
     panel: '',
   }
 
-  const offset = variant === 'card' ? 20 : 0
+  const offset = 0
 
   return (
     <div className={`relative text-gold ${sizeMap[variant]} ${className}`}>

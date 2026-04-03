@@ -1177,15 +1177,30 @@ input[type="range"].gold-slider::-webkit-slider-thumb {
 /* ── Practice responsive: mobile ── */
 @media (max-width: 639px) {
   .practice-keyboard {
-    height: 200px;
+    height: clamp(150px, 26vh, 200px);
   }
   .practice-play-btn {
-    width: 42px;
-    height: 42px;
+    width: 44px;
+    height: 44px;
   }
   .practice-reset-btn {
     padding: 4px 10px;
     font-size: 10px;
+  }
+  .practice-title-row {
+    padding: 8px 14px;
+  }
+  .practice-logo-text {
+    font-size: 18px;
+  }
+  .practice-subtitle-text {
+    font-size: 9px;
+  }
+  .practice-controls-row {
+    padding: 8px 14px;
+  }
+  .practice-score-inner {
+    padding: 44px 16px 52px;
   }
 }
 
