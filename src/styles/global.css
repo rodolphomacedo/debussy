@@ -316,15 +316,15 @@
   right: 0.5px;
   bottom: 0;
   border-radius: 0 0 4px 4px;
-  /* Warm ivory gradient matching the reference's yellowish tone */
+  /* Warm ivory gradient — brighter for visibility */
   background:
     linear-gradient(to bottom,
-      #f5f0e0 0%,
-      #efe9d5 10%,
-      #e8e0c8 30%,
-      #dfd6b8 55%,
-      #d2c8a5 80%,
-      #c5b998 100%
+      #faf6e8 0%,
+      #f5f0dc 10%,
+      #ede5c8 30%,
+      #e2d9b5 55%,
+      #d5caa0 80%,
+      #c8bc90 100%
     );
   border-left: 1px solid rgba(0, 0, 0, 0.1);
   border-right: 1px solid rgba(0, 0, 0, 0.14);
@@ -1170,14 +1170,14 @@ input[type="range"].gold-slider::-webkit-slider-thumb {
     height: 22px;
   }
   .practice-keyboard {
-    height: clamp(150px, 26vh, 240px);
+    height: clamp(120px, 22vh, 200px);
   }
 }
 
 /* ── Practice responsive: mobile ── */
 @media (max-width: 639px) {
   .practice-keyboard {
-    height: clamp(150px, 26vh, 200px);
+    height: clamp(110px, 22vh, 170px);
   }
   .practice-play-btn {
     width: 44px;

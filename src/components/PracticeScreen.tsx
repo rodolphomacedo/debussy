@@ -200,9 +200,9 @@ export function PracticeScreen({
         </div>
       </div>
 
-      {/* ══ PIANO KEYBOARD ══ */}
+      {/* ══ PIANO KEYBOARD — 5 octaves C2–C7 for readable key width ══ */}
       <div className="practice-keyboard">
-        <PianoKeyboard activeKeys={pressedNotes} />
+        <PianoKeyboard activeKeys={pressedNotes} startNote={36} endNote={96} />
       </div>
     </div>
   )
