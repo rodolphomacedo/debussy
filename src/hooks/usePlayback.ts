@@ -3,10 +3,14 @@ import * as Tone from 'tone'
 import type { ScoreData } from '../lib/demoScore'
 import type { ExpectedNote } from '../lib/scorer'
 import { getDurationTicks } from '../lib/scoreBuilder'
+import { vexFlowToMidi } from '../lib/midiToNote'
+import { playScheduledNote, playMetronomeTick } from '../lib/audioEngine'
 
 export interface UsePlaybackOptions {
   score: ScoreData
   bpm?: number
+  metronome?: boolean
+  autoPlayNotes?: boolean          // listen mode — play notes via piano
   onExpectedNote?: (note: ExpectedNote) => void
   onComplete?: () => void
 }
@@ -17,14 +21,12 @@ export interface UsePlaybackReturn {
   reset: () => void
   currentBeat: number
   isPlaying: boolean
-  progress: number // 0–1
+  progress: number
   expectedNotes: ExpectedNote[]
 }
 
-/**
- * Build a flat list of expected notes from the score data, computing
- * each note's absolute beat position and millisecond timestamp.
- */
+const QUARTER_TICKS = 4096
+
 function buildExpectedNotes(score: ScoreData): ExpectedNote[] {
   const notes: ExpectedNote[] = []
   const beatsPerMeasure = score.numBeats
@@ -33,26 +35,19 @@ function buildExpectedNotes(score: ScoreData): ExpectedNote[] {
   for (const measure of score.measures) {
     let localBeat = 0
     for (const noteData of measure.treble) {
-      // Skip rests
       if (noteData.duration.endsWith('r')) {
-        const ticks = getDurationTicks(noteData.duration)
-        const quarterTicks = 4096
-        localBeat += (ticks / quarterTicks) * (4 / score.beatValue)
+        localBeat += (getDurationTicks(noteData.duration) / QUARTER_TICKS) * (4 / score.beatValue)
         continue
       }
-
       for (const key of noteData.keys) {
-        const absoluteBeat = beatOffset + localBeat
         notes.push({
           pitch: key,
-          beat: absoluteBeat,
-          beatMs: 0, // computed after we know the BPM
+          beat: beatOffset + localBeat,
+          beatMs: 0,
+          duration: noteData.duration,
         })
       }
-
-      const ticks = getDurationTicks(noteData.duration)
-      const quarterTicks = 4096
-      localBeat += (ticks / quarterTicks) * (4 / score.beatValue)
+      localBeat += (getDurationTicks(noteData.duration) / QUARTER_TICKS) * (4 / score.beatValue)
     }
     beatOffset += beatsPerMeasure
   }
@@ -60,21 +55,23 @@ function buildExpectedNotes(score: ScoreData): ExpectedNote[] {
   return notes
 }
 
-/**
- * Compute beatMs for all notes based on BPM and beat value.
- * In 3/8 time, one beat = one eighth note. beatMs = (60000 / bpm) per beat.
- */
 function computeBeatMs(notes: ExpectedNote[], bpm: number): ExpectedNote[] {
   const msPerBeat = 60_000 / bpm
-  return notes.map(n => ({
-    ...n,
-    beatMs: n.beat * msPerBeat,
-  }))
+  return notes.map(n => ({ ...n, beatMs: n.beat * msPerBeat }))
+}
+
+/** Convert VexFlow duration + bpm to seconds */
+function durationToSeconds(duration: string, bpm: number): number {
+  const ticks = getDurationTicks(duration)
+  const quarterSeconds = 60 / bpm
+  return (ticks / QUARTER_TICKS) * quarterSeconds
 }
 
 export function usePlayback({
   score,
   bpm = 72,
+  metronome = false,
+  autoPlayNotes = false,
   onExpectedNote,
   onComplete,
 }: UsePlaybackOptions): UsePlaybackReturn {
@@ -90,7 +87,6 @@ export function usePlayback({
   const totalBeats = score.numBeats * score.measures.length
   const scheduledIdsRef = useRef<number[]>([])
 
-  // Build expected notes when score changes
   useEffect(() => {
     const raw = buildExpectedNotes(score)
     const withMs = computeBeatMs(raw, bpm)
@@ -101,8 +97,8 @@ export function usePlayback({
     const transport = Tone.getTransport()
     transport.bpm.value = bpm
 
-    // Schedule beat counter update
-    const beatInterval = '8n' // one eighth note per beat in 3/8
+    // ── Beat counter ────────────────────────────────────────────────────
+    const beatInterval = `${score.beatValue}n`
     const repeatId = transport.scheduleRepeat((time) => {
       Tone.getDraw().schedule(() => {
         setCurrentBeat(prev => {
@@ -118,22 +114,45 @@ export function usePlayback({
     }, beatInterval)
     scheduledIdsRef.current.push(repeatId)
 
-    // Schedule expected note callbacks
+    // ── Metronome clicks ────────────────────────────────────────────────
+    if (metronome) {
+      let beatCount = 0
+      const metroId = transport.scheduleRepeat((time) => {
+        playMetronomeTick(time, beatCount % score.numBeats === 0)
+        beatCount++
+      }, beatInterval)
+      scheduledIdsRef.current.push(metroId)
+    }
+
+    // ── Expected note callbacks + auto-play ─────────────────────────────
     for (const note of expectedNotes) {
       const timeInSeconds = note.beatMs / 1000
+
+      // Notify scorer (practice mode)
       const id = transport.schedule(() => {
         onExpectedNoteRef.current?.(note)
       }, timeInSeconds)
       scheduledIdsRef.current.push(id)
+
+      // Play piano sound (listen mode)
+      if (autoPlayNotes && note.duration) {
+        const durSec = durationToSeconds(note.duration, bpm)
+        const playId = transport.schedule((time) => {
+          try {
+            const midi = vexFlowToMidi(note.pitch)
+            playScheduledNote(midi, Math.min(durSec * 0.9, 1.5), time)
+          } catch { /* ignore unknown pitches */ }
+        }, timeInSeconds)
+        scheduledIdsRef.current.push(playId)
+      }
     }
 
     transport.start()
     setIsPlaying(true)
-  }, [bpm, totalBeats, expectedNotes])
+  }, [bpm, totalBeats, expectedNotes, metronome, autoPlayNotes, score.beatValue, score.numBeats])
 
   const stop = useCallback(() => {
-    const transport = Tone.getTransport()
-    transport.stop()
+    Tone.getTransport().stop()
     setIsPlaying(false)
   }, [])
 
@@ -141,39 +160,26 @@ export function usePlayback({
     const transport = Tone.getTransport()
     transport.stop()
     transport.position = 0
-
-    // Clear all scheduled events
-    for (const id of scheduledIdsRef.current) {
-      transport.clear(id)
-    }
+    for (const id of scheduledIdsRef.current) transport.clear(id)
     scheduledIdsRef.current = []
-
     setCurrentBeat(0)
     setIsPlaying(false)
   }, [])
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       const transport = Tone.getTransport()
       transport.stop()
       transport.position = 0
-      for (const id of scheduledIdsRef.current) {
-        transport.clear(id)
-      }
+      for (const id of scheduledIdsRef.current) transport.clear(id)
       scheduledIdsRef.current = []
     }
   }, [])
 
-  const progress = totalBeats > 0 ? currentBeat / totalBeats : 0
-
   return {
-    start,
-    stop,
-    reset,
-    currentBeat,
-    isPlaying,
-    progress,
+    start, stop, reset,
+    currentBeat, isPlaying,
+    progress: totalBeats > 0 ? currentBeat / totalBeats : 0,
     expectedNotes,
   }
 }

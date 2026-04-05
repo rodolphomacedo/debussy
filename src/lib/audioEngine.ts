@@ -159,6 +159,38 @@ export function playErrorSound(): void {
 }
 
 /**
+ * Play a piano note at a specific Tone.js transport time (for scheduled playback).
+ * `atTime` is a Tone.js time value in seconds from transport start.
+ */
+export function playScheduledNote(midiNumber: number, durationSec: number, atTime: number): void {
+  if (!piano || !audioReady) return
+  const note = midiToToneNote(midiNumber)
+  piano.triggerAttackRelease(note, durationSec, atTime, 0.75)
+}
+
+// Singleton metronome synth — created once, reused across calls
+let _clickSynth: Tone.Synth | null = null
+
+function getClickSynth(): Tone.Synth {
+  if (!_clickSynth) {
+    _clickSynth = new Tone.Synth({
+      oscillator: { type: 'triangle' },
+      envelope: { attack: 0.001, decay: 0.07, sustain: 0, release: 0.04 },
+      volume: -8,
+    }).toDestination()
+  }
+  return _clickSynth
+}
+
+/**
+ * Play a metronome tick at a specific Tone.js transport time.
+ */
+export function playMetronomeTick(atTime: number, isDownbeat = false): void {
+  if (!audioReady) return
+  getClickSynth().triggerAttackRelease(isDownbeat ? 'G6' : 'C6', '32n', atTime)
+}
+
+/**
  * Play a hit/success sound — a soft, high sine bell.
  */
 export function playHitSound(): void {

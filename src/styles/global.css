@@ -1110,29 +1110,20 @@ input[type="range"].gold-slider::-webkit-slider-thumb {
   border-bottom: 1px solid rgba(160, 120, 38, 0.25);
 }
 
-.practice-title-row {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+/* ── Header row: back · Debussy logo · stats ── */
+.practice-header-row {
+  position: relative;
+  z-index: 25;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 16px;
-  z-index: 25;
-  background: linear-gradient(to bottom, rgba(20,16,8,0.85) 0%, transparent 100%);
-}
-
-.practice-title-center {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1px;
+  padding: 10px 20px 4px;
+  background: linear-gradient(to bottom, rgba(20,16,8,0.7) 0%, transparent 100%);
 }
 
 .practice-logo-text {
   font-family: var(--font-elegant);
-  font-size: 16px;
+  font-size: 18px;
   font-style: italic;
   letter-spacing: 0.12em;
   background: linear-gradient(to bottom, #e8c87a, #c9a84c, #a07828, #c9a84c);
@@ -1141,24 +1132,58 @@ input[type="range"].gold-slider::-webkit-slider-thumb {
   background-clip: text;
 }
 
-.practice-subtitle-text {
+.practice-stats {
+  display: flex;
+  gap: 10px;
   font-family: var(--font-serif);
-  font-size: 8px;
-  color: #8a6520;
-  letter-spacing: 0.15em;
+  font-size: 12px;
+}
+
+/* ── Info row: title · composer · BPM ── */
+.practice-info-row {
+  position: relative;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 4px 20px 10px;
+  flex-wrap: wrap;
+}
+
+.practice-song-name {
+  font-family: var(--font-serif);
+  font-size: 11px;
+  color: rgba(212, 175, 55, 0.75);
+  letter-spacing: 0.1em;
   font-style: italic;
 }
 
-.practice-stats {
-  display: flex;
-  gap: 8px;
+.practice-composer {
   font-family: var(--font-serif);
-  font-size: 11px;
+  font-size: 10px;
+  color: rgba(212, 175, 55, 0.45);
+  letter-spacing: 0.08em;
 }
 
+.practice-info-sep {
+  color: rgba(212, 175, 55, 0.25);
+  font-size: 10px;
+}
+
+.practice-bpm-badge {
+  font-family: var(--font-mono, monospace);
+  font-size: 9px;
+  color: rgba(212, 175, 55, 0.4);
+  letter-spacing: 0.1em;
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  padding: 1px 5px;
+}
+
+/* ── Score area — flex-1, not absolute ── */
 .practice-score-box {
-  position: absolute;
-  inset: 0;
+  flex: 1 1 0;
+  min-height: 0;
   z-index: 10;
   overflow: auto;
   display: flex;
@@ -1173,106 +1198,117 @@ input[type="range"].gold-slider::-webkit-slider-thumb {
 
 .practice-score-inner {
   width: 100%;
-  padding: 40px 24px 48px;
+  padding: 8px 24px 12px;
 }
 
+/* ── Controls row: 3 columns — mode | play+reset | metronome ── */
 .practice-controls-row {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  position: relative;
+  z-index: 25;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 16px;
-  z-index: 25;
-  background: linear-gradient(to top, rgba(20,16,8,0.85) 0%, transparent 100%);
+  padding: 8px 16px;
+  background: linear-gradient(to top, rgba(20,16,8,0.75) 0%, transparent 100%);
+}
+
+/* Mode tabs */
+.practice-mode-tabs {
+  display: flex;
+  gap: 2px;
+  border: 1px solid rgba(212,175,55,0.15);
+}
+
+.practice-mode-tab {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  font-family: var(--font-serif);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(212,175,55,0.4);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.practice-mode-tab:hover { color: rgba(212,175,55,0.7); }
+.practice-mode-tab.active {
+  background: rgba(212,175,55,0.1);
+  color: rgba(212,175,55,0.9);
+}
+
+/* Center: play + reset */
+.practice-center-btns {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Metronome toggle */
+.practice-metro-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  font-family: var(--font-serif);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(212,175,55,0.35);
+  border: 1px solid rgba(212,175,55,0.12);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.practice-metro-btn:hover { color: rgba(212,175,55,0.65); }
+.practice-metro-btn.active {
+  color: rgba(212,175,55,0.9);
+  border-color: rgba(212,175,55,0.4);
+  background: rgba(212,175,55,0.08);
 }
 
 .practice-play-icon {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
 
-/* ── Practice responsive: tablet+ ── */
+/* ── Responsive: tablet+ ── */
 @media (min-width: 640px) {
-  .practice-title-row {
-    padding: 8px 20px;
+  .practice-header-row {
+    padding: 12px 24px 4px;
   }
-  .practice-logo-text {
-    font-size: 20px;
-  }
-  .practice-subtitle-text {
-    font-size: 9px;
-  }
-  .practice-stats {
-    gap: 12px;
-    font-size: 13px;
-  }
-  .practice-score-box {
-    margin: 0 16px;
-  }
-  .practice-score-inner {
-    padding: 12px 20px;
-  }
-  .practice-controls-row {
-    padding: 6px 24px;
-  }
-  .practice-play-icon {
-    width: 22px;
-    height: 22px;
-  }
-  .practice-keyboard {
-    height: clamp(120px, 22vh, 200px);
-  }
+  .practice-logo-text { font-size: 22px; }
+  .practice-stats { gap: 14px; font-size: 13px; }
+  .practice-info-row { padding: 4px 24px 12px; gap: 8px; }
+  .practice-song-name { font-size: 12px; }
+  .practice-composer  { font-size: 11px; }
+  .practice-bpm-badge { font-size: 10px; }
+  .practice-score-inner { padding: 10px 24px 14px; }
+  .practice-controls-row { padding: 10px 24px; }
+  .practice-mode-tab { font-size: 10px; padding: 5px 10px; }
+  .practice-metro-btn { font-size: 10px; padding: 5px 10px; }
+  .practice-play-icon { width: 18px; height: 18px; }
+  .practice-keyboard { height: clamp(120px, 22vh, 200px); }
 }
 
-/* ── Practice responsive: mobile ── */
+/* ── Responsive: mobile ── */
 @media (max-width: 639px) {
-  /* Compact ornate button on mobile */
   .ornate-button {
     padding: 8px 16px;
     font-size: 11px;
     letter-spacing: 0.12em;
   }
   .ornate-button::before,
-  .ornate-button::after {
-    display: none;
-  }
+  .ornate-button::after { display: none; }
 
-  .practice-keyboard {
-    height: clamp(110px, 22vh, 170px);
-  }
-  .practice-play-btn {
-    width: 44px;
-    height: 44px;
-  }
-  .practice-reset-btn {
-    padding: 4px 10px;
-    font-size: 10px;
-  }
-  /* Keep title/controls away from 50px corner ornament area */
-  .practice-title-row {
-    padding: 10px 56px;
-  }
-  .practice-logo-text {
-    font-size: 17px;
-  }
-  .practice-subtitle-text {
-    font-size: 9px;
-  }
-  .practice-controls-row {
-    padding: 10px 56px;
-  }
-  /* Extra left padding so brace/clef are not clipped */
-  .practice-score-inner {
-    padding: 48px 12px 56px;
-  }
-  /* Scale ornaments down to 50px on mobile */
-  .corner-ornament svg {
-    width: 50px;
-    height: 50px;
-  }
+  .practice-keyboard { height: clamp(110px, 22vh, 170px); }
+  .practice-play-btn { width: 40px; height: 40px; }
+  .practice-reset-btn { padding: 3px 8px; font-size: 9px; }
+  .practice-header-row { padding: 8px 52px 4px; }
+  .practice-info-row   { padding: 2px 52px 8px; }
+  .practice-controls-row { padding: 8px 52px; }
+  .practice-score-inner { padding: 6px 12px 10px; }
+  .corner-ornament svg { width: 50px; height: 50px; }
 }
 
 /* VexFlow overrides for practice-score-box (same as practice-score-area) */

@@ -11,6 +11,7 @@ export interface ExpectedNote {
   pitch: string      // VexFlow notation (e.g. "e/5")
   beat: number       // beat index
   beatMs: number     // ms from start when the beat occurs
+  duration?: string  // VexFlow duration string (e.g. "q", "8"), used for listen mode playback
 }
 
 export interface ScoreResult {
