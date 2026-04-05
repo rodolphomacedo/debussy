@@ -13,6 +13,8 @@ interface PianoKeyboardProps {
    * Defaults to true.
    */
   playable?: boolean
+  /** Called whenever a key is pressed (mouse/touch). Receives MIDI note number. */
+  onNoteClick?: (midi: number) => void
   /**
    * Range of MIDI notes to display. Defaults to full 88-key piano (A0=21 to C8=108).
    */
@@ -62,6 +64,7 @@ export function PianoKeyboard({
   playable = true,
   startNote = 21,  // A0
   endNote = 108,    // C8
+  onNoteClick,
 }: PianoKeyboardProps) {
   const activeSet = activeKeys instanceof Set ? activeKeys : new Set(activeKeys)
   const guideSet = guideKeys instanceof Set ? guideKeys : new Set(guideKeys)
@@ -77,27 +80,25 @@ export function PianoKeyboard({
   whiteNotes.forEach((note, idx) => { whiteKeyIndex.set(note, idx) })
 
   const handlePointerDown = useCallback((midi: number) => {
-    if (!playable) return
     setMousePressed(prev => {
       const next = new Set(prev)
       next.add(midi)
       return next
     })
-    if (isAudioReady()) playNote(midi, 0.7)
-  }, [playable])
+    if (playable && isAudioReady()) playNote(midi, 0.7)
+    onNoteClick?.(midi)
+  }, [playable, onNoteClick])
 
   const handlePointerUp = useCallback((midi: number) => {
-    if (!playable) return
     setMousePressed(prev => {
       const next = new Set(prev)
       next.delete(midi)
       return next
     })
-    if (isAudioReady()) releaseNote(midi)
+    if (playable && isAudioReady()) releaseNote(midi)
   }, [playable])
 
   const handlePointerLeave = useCallback((midi: number) => {
-    if (!playable) return
     setMousePressed(prev => {
       if (!prev.has(midi)) return prev
       const next = new Set(prev)

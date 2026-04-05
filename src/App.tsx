@@ -194,6 +194,8 @@ function App() {
               onNavigate={navigate}
               isConnected={isConnected}
               deviceName={deviceName}
+              pressedNotes={pressedNotes}
+              lastNoteOn={lastNoteOn}
             />
           </motion.div>
         )}

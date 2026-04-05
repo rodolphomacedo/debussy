@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, act, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, act } from '@testing-library/react'
 import { LoadingScreen } from './LoadingScreen'
 
 // Mock audioEngine so tests don't hit real audio/CDN

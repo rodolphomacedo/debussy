@@ -1,472 +1,570 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ArrowLeft, Plus, Trash2, Upload, Download, Play, ChevronDown, ChevronUp } from 'lucide-react'
-import { NavBar } from './NavBar'
+import { ArrowLeft, ArrowRight, ArrowUp, ArrowDown, Trash2, Plus, Minus,
+         Undo2, Play, Download, Upload, Circle } from 'lucide-react'
+import { PianoKeyboard } from './PianoKeyboard'
 import { ScoreRenderer } from './ScoreRenderer'
 import { useAppStore, type Screen } from '../store/useAppStore'
-import { parseNoteText, noteDataToText } from '../lib/composerParser'
 import { importMusicXml } from '../lib/musicXmlImporter'
-import type { ScoreData, MeasureData } from '../lib/demoScore'
+import { getDurationTicks } from '../lib/scoreBuilder'
+import type { ScoreData, MeasureData, NoteData } from '../lib/demoScore'
+
+// ── Props ──────────────────────────────────────────────────────────────────
 
 interface ComposerScreenProps {
   onNavigate: (screen: Screen) => void
   isConnected: boolean
   deviceName: string | null
+  pressedNotes: Set<number>
+  lastNoteOn: { note: number; velocity: number; time: number } | null
 }
 
-interface MeasureEntry {
-  id: string
-  treble: string
-  bass: string
+// ── Constants ──────────────────────────────────────────────────────────────
+
+const QUARTER_TICKS = 4096
+
+const DURATIONS: { value: string; label: string; key: string }[] = [
+  { value: 'w',  label: '1/1', key: '1' },
+  { value: 'h',  label: '1/2', key: '2' },
+  { value: 'q',  label: '1/4', key: '3' },
+  { value: '8',  label: '1/8', key: '4' },
+  { value: '16', label: '1/16', key: '5' },
+]
+
+const NOTE_SHARP = ['c','c#','d','d#','e','f','f#','g','g#','a','a#','b']
+const NOTE_FLAT  = ['c','db','d','eb','e','f','gb','g','ab','a','bb','b']
+
+const TIME_SIGS = ['4/4','3/4','2/4','6/8','3/8','2/2','12/8']
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+
+function midiToVexKey(midi: number, preferFlat: boolean): string {
+  const octave = Math.floor(midi / 12) - 1
+  const idx = midi % 12
+  return `${(preferFlat ? NOTE_FLAT : NOTE_SHARP)[idx]}/${octave}`
 }
 
-interface ParseErrors {
-  [measureId: string]: { treble?: string; bass?: string }
+function ticksPerBeat(beatValue: number): number {
+  return (QUARTER_TICKS * 4) / beatValue
 }
 
-const TIME_SIGS = ['4/4', '3/4', '2/4', '6/8', '3/8', '2/2', '12/8']
-
-const HELP_TEXT = `Note format: Pitch/Duration
-  C4/q  → C4 quarter   D#5/8 → D#5 eighth
-  Bb3/h → Bb3 half     F4/w  → F4 whole
-  C4/16 → 16th note    C4/qd → dotted quarter
-  rest/q → quarter rest
-  (C4,E4,G4)/q → chord
-
-Durations: w h q 8 16 32  (+d for dotted)
-Separate notes with commas: E5/8, D#5/8, E5/8`
-
-function uid() {
-  return Math.random().toString(36).slice(2)
+function measureTicks(numBeats: number, beatValue: number): number {
+  return numBeats * ticksPerBeat(beatValue)
 }
 
-function parseTimeSig(sig: string): { numBeats: number; beatValue: number } | null {
-  const m = sig.match(/^(\d+)\/(\d+)$/)
-  if (!m) return null
-  return { numBeats: parseInt(m[1]), beatValue: parseInt(m[2]) }
+function staffTicks(notes: NoteData[]): number {
+  return notes.reduce((s, n) => s + getDurationTicks(n.duration), 0)
 }
 
-function buildScore(
-  title: string,
-  composer: string,
-  bpmStr: string,
-  timeSig: string,
-  measures: MeasureEntry[],
-): { score: ScoreData; errors: ParseErrors } | { score: null; errors: ParseErrors } {
-  const ts = parseTimeSig(timeSig)
-  if (!ts) return { score: null, errors: { _meta: { treble: `Invalid time signature: "${timeSig}"` } } }
+/** Beat position inside a measure for cursor at noteIdx */
+function beatInMeasure(notes: NoteData[], noteIdx: number, beatValue: number): number {
+  const tpb = ticksPerBeat(beatValue)
+  const ticks = notes.slice(0, noteIdx).reduce((s, n) => s + getDurationTicks(n.duration), 0)
+  return ticks / tpb
+}
 
-  const bpm = parseInt(bpmStr) || 72
-  const parsedMeasures: MeasureData[] = []
-  const errors: ParseErrors = {}
+/** Global cursorBeat value for ScoreRenderer */
+function computeCursorBeat(
+  measureIdx: number, noteIdx: number,
+  measures: MeasureData[], staff: 'treble' | 'bass',
+  numBeats: number, beatValue: number,
+): number {
+  const notes = measures[measureIdx]?.[staff] ?? []
+  return measureIdx * numBeats + beatInMeasure(notes, noteIdx, beatValue)
+}
 
-  for (const m of measures) {
-    let trebleNotes = m.treble.trim() ? [] : [{ keys: ['b/4'], duration: 'qr' }]
-    let bassNotes = m.bass.trim() ? [] : [{ keys: ['d/3'], duration: 'qr' }]
+function parseTimeSig(sig: string): { numBeats: number; beatValue: number } {
+  const [a, b] = sig.split('/').map(Number)
+  return { numBeats: a || 4, beatValue: b || 4 }
+}
 
-    if (m.treble.trim()) {
-      try {
-        trebleNotes = parseNoteText(m.treble, 'treble')
-      } catch (e) {
-        errors[m.id] = { ...errors[m.id], treble: (e as Error).message }
-      }
-    }
-
-    if (m.bass.trim()) {
-      try {
-        bassNotes = parseNoteText(m.bass, 'bass')
-      } catch (e) {
-        errors[m.id] = { ...errors[m.id], bass: (e as Error).message }
-      }
-    }
-
-    parsedMeasures.push({ treble: trebleNotes, bass: bassNotes })
-  }
-
-  if (Object.keys(errors).length > 0) return { score: null, errors }
-
+/** Ensure each staff has at least a rest placeholder for VexFlow */
+function withRestFill(score: ScoreData): ScoreData {
+  const rest = (clef: 'treble' | 'bass'): NoteData => ({
+    keys: [clef === 'treble' ? 'b/4' : 'd/3'],
+    duration: 'wr',
+  })
   return {
-    score: {
-      title: title || 'Untitled',
-      composer: composer || '',
-      timeSignature: timeSig,
-      numBeats: ts.numBeats,
-      beatValue: ts.beatValue,
-      bpm,
-      measures: parsedMeasures,
-    },
-    errors: {},
+    ...score,
+    measures: score.measures.map(m => ({
+      treble: m.treble.length > 0 ? m.treble : [rest('treble')],
+      bass:   m.bass.length   > 0 ? m.bass   : [rest('bass')],
+    })),
   }
 }
 
-function scoreToMeasureEntries(score: ScoreData): MeasureEntry[] {
-  return score.measures.map(m => ({
-    id: uid(),
-    treble: noteDataToText(m.treble.filter(n => !n.duration.endsWith('r'))).trim() ||
-      (m.treble.every(n => n.duration.endsWith('r')) ? '' : noteDataToText(m.treble)),
-    bass: noteDataToText(m.bass.filter(n => !n.duration.endsWith('r'))).trim() ||
-      (m.bass.every(n => n.duration.endsWith('r')) ? '' : noteDataToText(m.bass)),
+function emptyMeasure(): MeasureData {
+  return { treble: [], bass: [] }
+}
+
+function cloneScore(m: MeasureData[]): MeasureData[] {
+  return m.map(measure => ({
+    treble: measure.treble.map(n => ({ ...n, keys: [...n.keys] })),
+    bass:   measure.bass.map(n =>   ({ ...n, keys: [...n.keys] })),
   }))
 }
 
-export function ComposerScreen({ onNavigate, isConnected, deviceName }: ComposerScreenProps) {
-  const setSettingsOpen = useAppStore(s => s.setSettingsOpen)
+// ── Note symbols (inline SVG) ──────────────────────────────────────────────
+
+function NoteIcon({ dur, dotted, size = 22 }: { dur: string; dotted?: boolean; size?: number }) {
+  const filled = dur !== 'w' && dur !== 'h'
+  const hasStem = dur !== 'w'
+  const flags = dur === '8' ? 1 : dur === '16' ? 2 : 0
+  const w = size * 0.9
+  const h = size * 1.3
+  return (
+    <svg width={w} height={h} viewBox="0 0 18 26" fill="none" style={{ display: 'block' }}>
+      {/* note head */}
+      <ellipse cx="8" cy="21" rx="6" ry="4.2"
+        fill={filled ? 'currentColor' : 'none'}
+        stroke="currentColor" strokeWidth="1.6"
+        transform="rotate(-15 8 21)"
+      />
+      {/* stem */}
+      {hasStem && <line x1="14" y1="19" x2="14" y2="4" stroke="currentColor" strokeWidth="1.5"/>}
+      {/* flag 1 */}
+      {flags >= 1 && <path d="M14 4 C22 7 20 13 14 14" stroke="currentColor" strokeWidth="1.5" fill="none"/>}
+      {/* flag 2 */}
+      {flags >= 2 && <path d="M14 10 C22 13 20 19 14 20" stroke="currentColor" strokeWidth="1.5" fill="none"/>}
+      {/* dot */}
+      {dotted && <circle cx="17" cy="20" r="1.5" fill="currentColor"/>}
+    </svg>
+  )
+}
+
+// ── Component ──────────────────────────────────────────────────────────────
+
+export function ComposerScreen({
+  onNavigate, pressedNotes, lastNoteOn,
+}: ComposerScreenProps) {
   const setSelectedScore = useAppStore(s => s.setSelectedScore)
-  const setBpm = useAppStore(s => s.setBpm)
-  const navigate = (s: Screen) => { setSettingsOpen(false); onNavigate(s) }
+  const setBpm           = useAppStore(s => s.setBpm)
 
-  const [title, setTitle] = useState('My Piece')
+  // ── Score metadata ─────────────────────────────────────────────────────
+  const [title,    setTitle]    = useState('New Piece')
   const [composer, setComposer] = useState('')
-  const [bpmStr, setBpmStr] = useState('90')
-  const [timeSig, setTimeSig] = useState('4/4')
-  const [measures, setMeasures] = useState<MeasureEntry[]>(() => [
-    { id: uid(), treble: 'C5/q, E5/q, G5/q, C6/q', bass: '(C3,E3,G3)/h, (C3,E3,G3)/h' },
-  ])
+  const [bpmStr,   setBpmStr]   = useState('90')
+  const [timeSig,  setTimeSig]  = useState('4/4')
 
-  const [previewScore, setPreviewScore] = useState<ScoreData | null>(null)
-  const [errors, setErrors] = useState<ParseErrors>({})
-  const [showPreview, setShowPreview] = useState(false)
-  const [showHelp, setShowHelp] = useState(false)
-  const [importError, setImportError] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // ── Score content ──────────────────────────────────────────────────────
+  const [measures,  setMeasures]  = useState<MeasureData[]>([emptyMeasure()])
+  const [history,   setHistory]   = useState<MeasureData[][]>([])
 
-  // Debounced parse on any change
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      const result = buildScore(title, composer, bpmStr, timeSig, measures)
-      setPreviewScore(result.score)
-      setErrors(result.errors)
-    }, 350)
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
-  }, [title, composer, bpmStr, timeSig, measures])
+  // ── Cursor ─────────────────────────────────────────────────────────────
+  const [curMeasure, setCurMeasure] = useState(0)
+  const [curNote,    setCurNote]    = useState(0)
+  const [curStaff,   setCurStaff]   = useState<'treble' | 'bass'>('treble')
 
+  // ── Input mode ─────────────────────────────────────────────────────────
+  const [inputMode,  setInputMode]  = useState(true)
+  const [selDur,     setSelDur]     = useState('q')
+  const [isDotted,   setIsDotted]   = useState(false)
+  const [accidental, setAccidental] = useState<'' | '#' | 'b'>('')
+
+  // ── Import ─────────────────────────────────────────────────────────────
+  const [importErr, setImportErr] = useState<string | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  // ── Derived ────────────────────────────────────────────────────────────
+  const { numBeats, beatValue } = parseTimeSig(timeSig)
+  const score: ScoreData = {
+    title: title || 'Untitled',
+    composer,
+    timeSignature: timeSig,
+    numBeats,
+    beatValue,
+    bpm: parseInt(bpmStr) || 90,
+    measures,
+  }
+  const displayScore = withRestFill(score)
+  const cursorBeat = computeCursorBeat(curMeasure, curNote, measures, curStaff, numBeats, beatValue)
+
+  // ── Undo ───────────────────────────────────────────────────────────────
+  const saveHistory = useCallback(() => {
+    setHistory(h => [...h.slice(-30), cloneScore(measures)])
+  }, [measures])
+
+  const undo = useCallback(() => {
+    if (history.length === 0) return
+    setMeasures(history[history.length - 1])
+    setHistory(h => h.slice(0, -1))
+  }, [history])
+
+  // ── Insert / delete ────────────────────────────────────────────────────
+  const insertNote = useCallback((midi: number) => {
+    if (!inputMode) return
+    const preferFlat = accidental === 'b'
+    const key = midiToVexKey(midi, preferFlat)
+    const dur = isDotted ? `${selDur}d` : selDur
+    const note: NoteData = { keys: [key], duration: dur }
+
+    saveHistory()
+
+    setMeasures(prev => {
+      const next = cloneScore(prev)
+      next[curMeasure][curStaff].splice(curNote, 0, note)
+      return next
+    })
+
+    // Advance cursor — if measure is now full, move to next
+    setCurNote(prev => {
+      const newIdx = prev + 1
+      const newNotes = measures[curMeasure][curStaff]
+      const newTicks = staffTicks([...newNotes.slice(0, prev), note])
+      const maxTicks = measureTicks(numBeats, beatValue)
+      if (newTicks >= maxTicks && curMeasure < measures.length - 1) {
+        setCurMeasure(m => m + 1)
+        return 0
+      }
+      return newIdx
+    })
+  }, [inputMode, accidental, isDotted, selDur, saveHistory, curMeasure, curNote, curStaff, measures, numBeats, beatValue])
+
+  const insertRest = useCallback(() => {
+    if (!inputMode) return
+    const dur = isDotted ? `${selDur}d` : selDur
+    const key = curStaff === 'treble' ? 'b/4' : 'd/3'
+    const note: NoteData = { keys: [key], duration: `${dur}r` }
+
+    saveHistory()
+    setMeasures(prev => {
+      const next = cloneScore(prev)
+      next[curMeasure][curStaff].splice(curNote, 0, note)
+      return next
+    })
+    setCurNote(n => n + 1)
+  }, [inputMode, isDotted, selDur, curStaff, saveHistory, curMeasure, curNote])
+
+  const deletePrev = useCallback(() => {
+    if (curNote === 0) {
+      if (curMeasure > 0) {
+        const prevLen = measures[curMeasure - 1][curStaff].length
+        setCurMeasure(m => m - 1)
+        setCurNote(prevLen)
+      }
+      return
+    }
+    saveHistory()
+    setMeasures(prev => {
+      const next = cloneScore(prev)
+      next[curMeasure][curStaff].splice(curNote - 1, 1)
+      return next
+    })
+    setCurNote(n => Math.max(0, n - 1))
+  }, [measures, curMeasure, curNote, curStaff, saveHistory])
+
+  // ── Cursor navigation ──────────────────────────────────────────────────
+  const movePrev = useCallback(() => {
+    if (curNote > 0) {
+      setCurNote(n => n - 1)
+    } else if (curMeasure > 0) {
+      setCurMeasure(m => m - 1)
+      setCurNote(measures[curMeasure - 1][curStaff].length)
+    }
+  }, [curNote, curMeasure, curStaff, measures])
+
+  const moveNext = useCallback(() => {
+    const len = measures[curMeasure][curStaff].length
+    if (curNote < len) {
+      setCurNote(n => n + 1)
+    } else if (curMeasure < measures.length - 1) {
+      setCurMeasure(m => m + 1)
+      setCurNote(0)
+    }
+  }, [curNote, curMeasure, curStaff, measures])
+
+  const toggleStaff = useCallback(() => {
+    setCurStaff(s => s === 'treble' ? 'bass' : 'treble')
+    setCurNote(0)
+  }, [])
+
+  // ── Measure operations ─────────────────────────────────────────────────
   const addMeasure = useCallback(() => {
-    setMeasures(prev => [...prev, { id: uid(), treble: '', bass: '' }])
-  }, [])
+    saveHistory()
+    setMeasures(prev => [...prev, emptyMeasure()])
+  }, [saveHistory])
 
-  const removeMeasure = useCallback((id: string) => {
-    setMeasures(prev => prev.length > 1 ? prev.filter(m => m.id !== id) : prev)
-  }, [])
+  const removeMeasure = useCallback(() => {
+    if (measures.length <= 1) return
+    saveHistory()
+    setMeasures(prev => prev.slice(0, -1))
+    if (curMeasure >= measures.length - 1) {
+      setCurMeasure(measures.length - 2)
+      setCurNote(0)
+    }
+  }, [measures, curMeasure, saveHistory])
 
-  const updateMeasure = useCallback((id: string, field: 'treble' | 'bass', value: string) => {
-    setMeasures(prev => prev.map(m => m.id === id ? { ...m, [field]: value } : m))
-  }, [])
+  // ── MIDI input ─────────────────────────────────────────────────────────
+  const lastNoteRef = useRef<typeof lastNoteOn>(null)
+  useEffect(() => {
+    if (!lastNoteOn || !inputMode) return
+    if (lastNoteRef.current?.time === lastNoteOn.time) return
+    lastNoteRef.current = lastNoteOn
+    insertNote(lastNoteOn.note)
+  }, [lastNoteOn, inputMode, insertNote])
 
+  // ── Keyboard shortcuts ─────────────────────────────────────────────────
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName
+      if (tag === 'INPUT' || tag === 'SELECT') return
+
+      switch (e.key) {
+        case '1': setSelDur('w'); break
+        case '2': setSelDur('h'); break
+        case '3': setSelDur('q'); break
+        case '4': setSelDur('8'); break
+        case '5': setSelDur('16'); break
+        case '.': setIsDotted(d => !d); break
+        case 'r': case 'R': if (inputMode) insertRest(); break
+        case 'ArrowLeft':  e.preventDefault(); movePrev(); break
+        case 'ArrowRight': e.preventDefault(); moveNext(); break
+        case 'ArrowUp': case 'ArrowDown': e.preventDefault(); toggleStaff(); break
+        case 'Backspace': case 'Delete': e.preventDefault(); if (inputMode) deletePrev(); break
+        case 'z':
+          if (e.ctrlKey || e.metaKey) { e.preventDefault(); undo() }
+          break
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [inputMode, insertRest, movePrev, moveNext, toggleStaff, deletePrev, undo])
+
+  // ── Import ─────────────────────────────────────────────────────────────
   const handleImport = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    setImportError(null)
-
+    setImportErr(null)
     const reader = new FileReader()
-    reader.onload = (ev) => {
+    reader.onload = ev => {
       try {
         const text = ev.target?.result as string
-        let score: ScoreData
-
-        if (file.name.endsWith('.json')) {
-          score = JSON.parse(text) as ScoreData
-          if (!score.measures || !score.title) throw new Error('Invalid JSON: missing title or measures')
-        } else {
-          score = importMusicXml(text)
-        }
-
-        setTitle(score.title)
-        setComposer(score.composer)
-        setBpmStr(String(score.bpm))
-        setTimeSig(score.timeSignature)
-        setMeasures(scoreToMeasureEntries(score))
-      } catch (err) {
-        setImportError((err as Error).message)
-      }
+        const imported: ScoreData = file.name.endsWith('.json')
+          ? JSON.parse(text) as ScoreData
+          : importMusicXml(text)
+        if (!imported.measures?.length) throw new Error('No measures found')
+        setTitle(imported.title)
+        setComposer(imported.composer)
+        setBpmStr(String(imported.bpm))
+        setTimeSig(imported.timeSignature)
+        setMeasures(imported.measures)
+        setCurMeasure(0); setCurNote(0); setCurStaff('treble')
+        setHistory([])
+      } catch (err) { setImportErr((err as Error).message) }
     }
     reader.readAsText(file)
     e.target.value = ''
   }, [])
 
   const handleExport = useCallback(() => {
-    if (!previewScore) return
-    const json = JSON.stringify(previewScore, null, 2)
-    const blob = new Blob([json], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
+    const blob = new Blob([JSON.stringify(score, null, 2)], { type: 'application/json' })
+    const url  = URL.createObjectURL(blob)
+    const a    = document.createElement('a')
     a.href = url
-    a.download = `${previewScore.title.replace(/\s+/g, '_')}.json`
+    a.download = `${score.title.replace(/\s+/g, '_')}.json`
     a.click()
     URL.revokeObjectURL(url)
-  }, [previewScore])
+  }, [score])
 
   const handlePractice = useCallback(() => {
-    if (!previewScore) return
-    setSelectedScore(previewScore)
-    setBpm(previewScore.bpm)
+    setSelectedScore(score)
+    setBpm(score.bpm)
     onNavigate('practice')
-  }, [previewScore, setSelectedScore, setBpm, onNavigate])
+  }, [score, setSelectedScore, setBpm, onNavigate])
 
-  const hasErrors = Object.keys(errors).length > 0
+  // ── Current measure ticks fill info ───────────────────────────────────
+  const curNotes     = measures[curMeasure]?.[curStaff] ?? []
+  const curTicks     = staffTicks(curNotes)
+  const maxTicks     = measureTicks(numBeats, beatValue)
+  const fillPct      = Math.min(100, Math.round((curTicks / maxTicks) * 100))
+  const curDurLabel  = DURATIONS.find(d => d.value === selDur)?.label ?? selDur
 
   return (
-    <div className="h-full flex flex-col overflow-hidden relative">
+    <div className="h-full flex flex-col overflow-hidden relative bg-piano-black" tabIndex={-1}>
       <div className="leather-texture" />
 
-      <NavBar
-        currentScreen="home"
-        onNavigate={navigate}
-        isConnected={isConnected}
-        deviceName={deviceName}
-        onSettingsOpen={() => setSettingsOpen(true)}
-      />
-
-      {/* Back + title bar */}
-      <div className="flex items-center gap-3 px-4 sm:px-6 py-2 border-b border-gold/10 bg-black/30 relative z-10">
+      {/* ── Top metadata bar ──────────────────────────────────────────── */}
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-gold/10 bg-black/40 relative z-10 shrink-0">
         <button
           onClick={() => onNavigate('home')}
-          className="flex items-center gap-1.5 text-gold/60 hover:text-gold transition-colors text-sm font-serif cursor-pointer"
+          className="text-gold/50 hover:text-gold transition-colors cursor-pointer shrink-0"
         >
-          <ArrowLeft size={14} />
-          <span>Home</span>
+          <ArrowLeft size={16} />
         </button>
-        <span className="text-gold/20">·</span>
-        <span className="text-gold/70 font-serif tracking-wider text-sm">Score Composer</span>
+
+        <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
+          <input value={title} onChange={e => setTitle(e.target.value)}
+            className="composer-meta-input w-32 sm:w-44 font-serif text-gold/90 text-sm"
+            placeholder="Title" />
+          <input value={composer} onChange={e => setComposer(e.target.value)}
+            className="composer-meta-input w-24 sm:w-36 text-gold/60 text-xs italic"
+            placeholder="Composer" />
+          <input type="number" min={20} max={300} value={bpmStr}
+            onChange={e => setBpmStr(e.target.value)}
+            className="composer-meta-input w-14 text-gold/60 text-xs text-center"
+            placeholder="BPM" />
+          <select value={timeSig} onChange={e => setTimeSig(e.target.value)}
+            className="composer-meta-input text-gold/60 text-xs">
+            {TIME_SIGS.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <button onClick={handleExport}
+            className="composer-action-btn hidden sm:flex" title="Export JSON">
+            <Download size={13} />
+          </button>
+          <button onClick={() => fileRef.current?.click()}
+            className="composer-action-btn hidden sm:flex" title="Import .xml / .json">
+            <Upload size={13} />
+          </button>
+          <button onClick={handlePractice}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-b from-gold-light to-gold text-black text-xs font-serif tracking-wider cursor-pointer hover:brightness-110 transition-all">
+            <Play size={11} className="fill-current" />
+            <span className="hidden sm:inline">Practice</span>
+          </button>
+        </div>
       </div>
 
-      {/* Main two-column layout */}
-      <div className="flex-1 flex overflow-hidden relative z-10">
+      {/* ── Toolbar ───────────────────────────────────────────────────── */}
+      <div className="flex items-center gap-1 sm:gap-2 px-3 py-1.5 border-b border-gold/10 bg-black/30 relative z-10 shrink-0 overflow-x-auto">
 
-        {/* ── Left: Editor panel ── */}
-        <div className="flex-1 flex flex-col overflow-y-auto custom-scrollbar px-4 sm:px-6 py-4 gap-4 lg:max-w-[55%]">
+        {/* Input mode toggle */}
+        <button
+          onClick={() => setInputMode(m => !m)}
+          title="Note input mode (N)"
+          className={`composer-tool-btn flex items-center gap-1 px-2 ${inputMode ? 'composer-tool-active' : ''}`}
+        >
+          <Circle size={8} className={inputMode ? 'fill-current text-red-400' : 'text-gold/40'} />
+          <span className="text-[10px] font-mono hidden sm:inline">{inputMode ? 'INPUT' : 'SELECT'}</span>
+        </button>
 
-          {/* Metadata */}
-          <div className="ornate-card p-4 sm:p-5">
-            <h3 className="font-serif text-gold/80 tracking-wider text-sm sm:text-base mb-3">Score Info</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-gold/50 text-xs font-serif mb-1">Title</label>
-                <input
-                  value={title}
-                  onChange={e => setTitle(e.target.value)}
-                  className="composer-input w-full"
-                  placeholder="My Piece"
-                />
-              </div>
-              <div>
-                <label className="block text-gold/50 text-xs font-serif mb-1">Composer</label>
-                <input
-                  value={composer}
-                  onChange={e => setComposer(e.target.value)}
-                  className="composer-input w-full"
-                  placeholder="Your name"
-                />
-              </div>
-              <div>
-                <label className="block text-gold/50 text-xs font-serif mb-1">BPM</label>
-                <input
-                  type="number"
-                  min={20}
-                  max={300}
-                  value={bpmStr}
-                  onChange={e => setBpmStr(e.target.value)}
-                  className="composer-input w-full"
-                />
-              </div>
-              <div>
-                <label className="block text-gold/50 text-xs font-serif mb-1">Time Signature</label>
-                <select
-                  value={timeSig}
-                  onChange={e => setTimeSig(e.target.value)}
-                  className="composer-input w-full"
-                >
-                  {TIME_SIGS.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-              </div>
-            </div>
-          </div>
+        <div className="composer-divider" />
 
-          {/* Help section */}
-          <div className="ornate-card overflow-hidden">
-            <button
-              onClick={() => setShowHelp(h => !h)}
-              className="w-full flex items-center justify-between px-4 py-2.5 text-gold/60 hover:text-gold/80 transition-colors"
-            >
-              <span className="font-serif text-xs tracking-wider">Note Format Reference</span>
-              {showHelp ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-            </button>
-            {showHelp && (
-              <pre className="px-4 pb-3 text-gold/50 text-[10px] sm:text-xs font-mono leading-relaxed border-t border-gold/10">
-                {HELP_TEXT}
-              </pre>
-            )}
-          </div>
+        {/* Duration buttons */}
+        {DURATIONS.map(d => (
+          <button
+            key={d.value}
+            onClick={() => setSelDur(d.value)}
+            title={`${d.label} (${d.key})`}
+            className={`composer-tool-btn flex flex-col items-center gap-0.5 px-1.5 py-1 ${selDur === d.value ? 'composer-tool-active' : ''}`}
+          >
+            <NoteIcon dur={d.value} dotted={isDotted && selDur === d.value} />
+            <span className="text-[8px] font-mono text-gold/40">{d.key}</span>
+          </button>
+        ))}
 
-          {/* Import error */}
-          {importError && (
-            <div className="px-4 py-2 bg-red-900/30 border border-red-700/50 rounded text-red-400 text-xs font-mono">
-              Import error: {importError}
-            </div>
-          )}
+        {/* Dotted */}
+        <button
+          onClick={() => setIsDotted(d => !d)}
+          title="Dotted (.)"
+          className={`composer-tool-btn px-2 text-base font-bold leading-none ${isDotted ? 'composer-tool-active' : ''}`}
+        >·</button>
 
-          {/* Mobile: preview toggle */}
-          <div className="lg:hidden">
-            <button
-              onClick={() => setShowPreview(v => !v)}
-              className="w-full flex items-center justify-between px-4 py-2.5 ornate-card text-gold/60 hover:text-gold/80 transition-colors"
-            >
-              <span className="font-serif text-xs tracking-wider">
-                {hasErrors ? '⚠ Fix errors to see preview' : 'Preview Score'}
-              </span>
-              {showPreview ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-            </button>
-            {showPreview && previewScore && (
-              <div className="mt-2 ornate-card p-3 overflow-x-auto">
-                <ScoreRenderer score={previewScore} darkMode />
-              </div>
-            )}
-          </div>
+        <div className="composer-divider" />
 
-          {/* Measures */}
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <h3 className="font-serif text-gold/80 tracking-wider text-sm sm:text-base">
-                Measures <span className="text-gold/40 text-xs">({measures.length})</span>
-              </h3>
-            </div>
+        {/* Accidentals */}
+        {(['', '#', 'b'] as const).map(acc => (
+          <button key={acc} onClick={() => setAccidental(acc)}
+            title={acc === '' ? 'Natural' : acc === '#' ? 'Sharp' : 'Flat'}
+            className={`composer-tool-btn w-7 text-sm font-bold ${accidental === acc ? 'composer-tool-active' : ''}`}>
+            {acc === '' ? '♮' : acc === '#' ? '♯' : '♭'}
+          </button>
+        ))}
 
-            {measures.map((m, idx) => (
-              <div key={m.id} className="ornate-card p-3 sm:p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-gold/50 font-serif text-xs tracking-wider">
-                    Measure {idx + 1}
-                  </span>
-                  {measures.length > 1 && (
-                    <button
-                      onClick={() => removeMeasure(m.id)}
-                      className="text-gold/30 hover:text-red-400 transition-colors cursor-pointer"
-                    >
-                      <Trash2 size={13} />
-                    </button>
-                  )}
-                </div>
+        <div className="composer-divider" />
 
-                <div className="flex flex-col gap-2">
-                  <div>
-                    <label className="block text-gold/40 text-[10px] font-mono mb-1">
-                      TREBLE (right hand)
-                    </label>
-                    <textarea
-                      rows={2}
-                      value={m.treble}
-                      onChange={e => updateMeasure(m.id, 'treble', e.target.value)}
-                      className="composer-input w-full resize-none font-mono text-xs"
-                      placeholder="E5/8, D#5/8, E5/8"
-                    />
-                    {errors[m.id]?.treble && (
-                      <p className="text-red-400 text-[10px] mt-0.5 font-mono">{errors[m.id].treble}</p>
-                    )}
-                  </div>
+        {/* Rest */}
+        <button onClick={insertRest} disabled={!inputMode}
+          title="Insert rest (R)"
+          className="composer-tool-btn px-2 text-base disabled:opacity-30">𝄽</button>
 
-                  <div>
-                    <label className="block text-gold/40 text-[10px] font-mono mb-1">
-                      BASS (left hand)
-                    </label>
-                    <textarea
-                      rows={2}
-                      value={m.bass}
-                      onChange={e => updateMeasure(m.id, 'bass', e.target.value)}
-                      className="composer-input w-full resize-none font-mono text-xs"
-                      placeholder="(A2,E3,A3)/qd"
-                    />
-                    {errors[m.id]?.bass && (
-                      <p className="text-red-400 text-[10px] mt-0.5 font-mono">{errors[m.id].bass}</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
+        <div className="composer-divider" />
 
-            <button
-              onClick={addMeasure}
-              className="flex items-center justify-center gap-2 py-3 border border-dashed border-gold/20 hover:border-gold/50 text-gold/40 hover:text-gold/70 transition-all font-serif text-sm tracking-wider cursor-pointer"
-            >
-              <Plus size={14} />
-              Add Measure
-            </button>
-          </div>
+        {/* Navigation */}
+        <button onClick={movePrev} title="Previous (←)" className="composer-tool-btn px-1.5">
+          <ArrowLeft size={12} />
+        </button>
+        <button onClick={moveNext} title="Next (→)" className="composer-tool-btn px-1.5">
+          <ArrowRight size={12} />
+        </button>
+        <button onClick={toggleStaff} title="Switch staff (↑↓)" className="composer-tool-btn px-1.5">
+          <ArrowUp size={10} /><ArrowDown size={10} />
+        </button>
+        <button onClick={deletePrev} disabled={!inputMode}
+          title="Delete (Backspace)" className="composer-tool-btn px-1.5 disabled:opacity-30">
+          <Trash2 size={12} />
+        </button>
 
-          {/* Actions */}
-          <div className="flex flex-col gap-3 pb-6">
-            <div className="flex gap-2">
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 border border-gold/30 hover:border-gold/60 text-gold/60 hover:text-gold/90 transition-all font-serif text-xs tracking-wider cursor-pointer"
-              >
-                <Upload size={13} />
-                Import (.xml / .json)
-              </button>
-              <button
-                onClick={handleExport}
-                disabled={!previewScore}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 border border-gold/30 hover:border-gold/60 text-gold/60 hover:text-gold/90 transition-all font-serif text-xs tracking-wider cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <Download size={13} />
-                Export JSON
-              </button>
-            </div>
+        <div className="composer-divider" />
 
-            <button
-              onClick={handlePractice}
-              disabled={!previewScore}
-              className="ornate-button w-full flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <Play size={14} className="fill-current" />
-              Practice This Score
-            </button>
-            {hasErrors && (
-              <p className="text-center text-gold/40 text-xs font-serif italic">
-                Fix the errors above to enable practice
-              </p>
-            )}
-          </div>
-        </div>
+        {/* Measure ops */}
+        <button onClick={addMeasure} title="Add measure" className="composer-tool-btn px-1.5">
+          <Plus size={12} />
+        </button>
+        <button onClick={removeMeasure} disabled={measures.length <= 1}
+          title="Remove last measure" className="composer-tool-btn px-1.5 disabled:opacity-30">
+          <Minus size={12} />
+        </button>
 
-        {/* ── Right: Preview panel (desktop only) ── */}
-        <div className="hidden lg:flex flex-col flex-1 overflow-y-auto border-l border-gold/10 px-6 py-4 gap-4">
-          <h3 className="font-serif text-gold/80 tracking-wider text-base shrink-0">Live Preview</h3>
+        <div className="composer-divider" />
 
-          {previewScore ? (
-            <div className="overflow-x-auto">
-              <ScoreRenderer score={previewScore} darkMode />
-            </div>
-          ) : (
-            <div className="flex-1 flex items-center justify-center">
-              {hasErrors ? (
-                <div className="text-center">
-                  <p className="text-red-400/70 font-serif text-sm">Fix errors to see preview</p>
-                  {Object.entries(errors).map(([id, e]) => {
-                    const idx = measures.findIndex(m => m.id === id)
-                    return (
-                      <div key={id} className="mt-2 text-xs text-red-400/50 font-mono">
-                        {idx >= 0 ? `Measure ${idx + 1}: ` : ''}
-                        {e.treble ?? e.bass}
-                      </div>
-                    )
-                  })}
-                </div>
-              ) : (
-                <p className="text-gold/30 font-serif italic text-sm">Start adding notes to preview the score</p>
-              )}
+        {/* Undo */}
+        <button onClick={undo} disabled={history.length === 0}
+          title="Undo (Ctrl+Z)" className="composer-tool-btn px-1.5 disabled:opacity-30">
+          <Undo2 size={12} />
+        </button>
+      </div>
+
+      {/* ── Score area ────────────────────────────────────────────────── */}
+      <div className="flex-1 overflow-auto relative" style={{ minHeight: 0 }}>
+        <div className="p-4 pb-2">
+          {importErr && (
+            <div className="mb-2 px-3 py-1.5 bg-red-900/30 border border-red-700/40 text-red-400 text-xs font-mono">
+              {importErr}
             </div>
           )}
+          <ScoreRenderer
+            score={displayScore}
+            cursorBeat={cursorBeat}
+            darkMode
+          />
         </div>
+      </div>
+
+      {/* ── Status bar ────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between px-4 py-1.5 border-t border-gold/10 bg-black/40 text-[10px] font-mono text-gold/40 shrink-0 relative z-10">
+        <div className="flex items-center gap-3">
+          <span className={`font-semibold ${curStaff === 'treble' ? 'text-gold/70' : 'text-gold/30'}`}>TREBLE</span>
+          <span className={`font-semibold ${curStaff === 'bass' ? 'text-gold/70' : 'text-gold/30'}`}>BASS</span>
+          <span>M.{curMeasure + 1} · note {curNote + 1}/{curNotes.length + 1}</span>
+          <span className={fillPct >= 100 ? 'text-green-400/60' : ''}>{fillPct}% full</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span>{curDurLabel}{isDotted ? '.' : ''} {accidental === '#' ? '♯' : accidental === 'b' ? '♭' : '♮'}</span>
+          <span className="hidden sm:inline">{measures.length} measure{measures.length !== 1 ? 's' : ''}</span>
+          {/* Mobile import/export */}
+          <button onClick={handleExport} className="sm:hidden text-gold/40 hover:text-gold/70 cursor-pointer">
+            <Download size={11} />
+          </button>
+          <button onClick={() => fileRef.current?.click()} className="sm:hidden text-gold/40 hover:text-gold/70 cursor-pointer">
+            <Upload size={11} />
+          </button>
+        </div>
+      </div>
+
+      {/* ── Piano keyboard ────────────────────────────────────────────── */}
+      <div className="shrink-0" style={{ height: 'clamp(90px, 18vh, 150px)' }}>
+        <PianoKeyboard
+          activeKeys={pressedNotes}
+          startNote={48}
+          endNote={84}
+          onNoteClick={inputMode ? insertNote : undefined}
+        />
       </div>
 
       {/* Hidden file input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".xml,.mxl,.json"
-        onChange={handleImport}
-        className="hidden"
-      />
+      <input ref={fileRef} type="file" accept=".xml,.mxl,.json"
+        onChange={handleImport} className="hidden" />
     </div>
   )
 }

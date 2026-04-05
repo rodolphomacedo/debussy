@@ -80,7 +80,7 @@
     0 0 0 6px rgba(212,175,55,0.3);
 }
 
-/* ── Composer screen inputs ── */
+/* ── Composer screen ── */
 .composer-input {
   @apply bg-black/50 border border-gold/20 text-gold/80 font-serif text-sm px-3 py-2 transition-colors;
   outline: none;
@@ -89,11 +89,48 @@
   border-color: rgba(212, 175, 55, 0.5);
   box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.15);
 }
-.composer-input::placeholder {
-  @apply text-gold/20;
+.composer-input::placeholder { @apply text-gold/20; }
+.composer-input option { background: #1a1408; }
+
+/* Compact inline metadata inputs (top bar) */
+.composer-meta-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+  color: inherit;
+  outline: none;
+  padding: 1px 4px;
+  transition: border-color 0.2s;
 }
-.composer-input option {
-  background: #1a1408;
+.composer-meta-input:focus {
+  border-bottom-color: rgba(212, 175, 55, 0.5);
+}
+.composer-meta-input::placeholder { color: rgba(212,175,55,0.2); }
+.composer-meta-input option { background: #1a1408; }
+
+/* Toolbar buttons */
+.composer-tool-btn {
+  @apply flex items-center justify-center text-gold/50 hover:text-gold/90
+         hover:bg-gold/10 transition-all cursor-pointer shrink-0;
+  min-width: 28px;
+  min-height: 28px;
+  border: 1px solid transparent;
+}
+.composer-tool-active {
+  @apply text-gold border-gold/30 bg-gold/10;
+}
+.composer-divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(212,175,55,0.15);
+  flex-shrink: 0;
+  margin: 0 2px;
+}
+/* Icon action button (export/import in header) */
+.composer-action-btn {
+  @apply items-center gap-1 px-2 py-1.5 border border-gold/20 text-gold/50
+         hover:text-gold/80 hover:border-gold/40 transition-all text-xs font-serif
+         tracking-wider cursor-pointer;
 }
 
 /* ── Ornate button ── */
