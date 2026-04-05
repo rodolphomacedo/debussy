@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion } from 'motion/react'
-import { Play, Pause, RotateCcw, ArrowLeft, Music, Piano, BellOff, Bell } from 'lucide-react'
 import { PianoKeyboard } from './PianoKeyboard'
 import { ScoreRenderer } from './ScoreRenderer'
 import { OrnateFrame } from './OrnateFrame'
-import { LyreIcon } from './icons/LyreIcon'
+import { PracticeHeader } from './PracticeHeader'
+import { PracticeControls } from './PracticeControls'
 import { usePlayback } from '../hooks/usePlayback'
 import {
   evaluatePerformance,
@@ -164,34 +164,14 @@ export function PracticeScreen({
       <div className="practice-top-section">
         <OrnateFrame variant="full" className="absolute inset-0 pointer-events-none z-20" />
 
-        {/* ── Header row: back · logo · stats ── */}
-        <div className="practice-header-row">
-          <button onClick={onBack} className="practice-back-btn">
-            <ArrowLeft size={13} />
-            <span className="hidden sm:inline">Home</span>
-          </button>
-
-          <span className="practice-logo-text">Debussy</span>
-
-          {mode === 'practice' && (
-            <div className="practice-stats">
-              <span style={{ color: '#6dbf8a' }}>✓ {stats.correct}</span>
-              <span style={{ color: '#bf6d6d' }}>✗ {stats.wrong}</span>
-            </div>
-          )}
-          {mode === 'listen' && (
-            <LyreIcon size={20} style={{ color: 'rgba(160,120,38,0.4)' }} />
-          )}
-        </div>
-
-        {/* ── Info row: title · composer · BPM ── */}
-        <div className="practice-info-row">
-          <span className="practice-song-name">{score.title}</span>
-          <span className="practice-info-sep">·</span>
-          <span className="practice-composer">{score.composer}</span>
-          <span className="practice-info-sep">·</span>
-          <span className="practice-bpm-badge">{bpm} BPM</span>
-        </div>
+        <PracticeHeader
+          title={score.title}
+          composer={score.composer}
+          bpm={bpm}
+          mode={mode}
+          stats={stats}
+          onBack={onBack}
+        />
 
         {/* ── Score area ── */}
         <div className="practice-score-box">
@@ -216,56 +196,16 @@ export function PracticeScreen({
           )}
         </div>
 
-        {/* ── Controls row ── */}
-        <div className="practice-controls-row">
-
-          {/* Mode tabs (left) */}
-          <div className="practice-mode-tabs">
-            <button
-              onClick={() => switchMode('listen')}
-              className={`practice-mode-tab ${mode === 'listen' ? 'active' : ''}`}
-            >
-              <Music size={11} />
-              <span>Listen</span>
-            </button>
-            <button
-              onClick={() => switchMode('practice')}
-              className={`practice-mode-tab ${mode === 'practice' ? 'active' : ''}`}
-            >
-              <Piano size={11} />
-              <span>Practice</span>
-            </button>
-          </div>
-
-          {/* Play + Reset (center) */}
-          <div className="practice-center-btns">
-            <button
-              onClick={isPlaying ? handleStop : handleStart}
-              className="practice-play-btn"
-            >
-              <div className="practice-play-inner">
-                {isPlaying
-                  ? <Pause className="practice-play-icon fill-current" />
-                  : <Play  className="practice-play-icon fill-current ml-0.5" />}
-              </div>
-            </button>
-
-            <button onClick={handleReset} className="practice-reset-btn">
-              <RotateCcw size={11} />
-              <span>Reset</span>
-            </button>
-          </div>
-
-          {/* Metronome toggle (right) */}
-          <button
-            onClick={() => setMetronome(m => !m)}
-            className={`practice-metro-btn ${metronome ? 'active' : ''}`}
-            title={metronome ? 'Metronome on' : 'Metronome off'}
-          >
-            {metronome ? <Bell size={14} /> : <BellOff size={14} />}
-            <span className="hidden sm:inline">{metronome ? 'Metro' : 'Metro'}</span>
-          </button>
-        </div>
+        <PracticeControls
+          mode={mode}
+          isPlaying={isPlaying}
+          metronome={metronome}
+          onSwitchMode={switchMode}
+          onPlay={handleStart}
+          onStop={handleStop}
+          onReset={handleReset}
+          onToggleMetronome={() => setMetronome(m => !m)}
+        />
       </div>
 
       {/* ══ PIANO KEYBOARD ══ */}

@@ -1112,6 +1112,7 @@ input[type="range"].gold-slider::-webkit-slider-thumb {
 
 /* ── Header row: back · Debussy logo · stats ── */
 .practice-header-row {
+  flex-shrink: 0;
   position: relative;
   z-index: 25;
   display: flex;
@@ -1141,6 +1142,7 @@ input[type="range"].gold-slider::-webkit-slider-thumb {
 
 /* ── Info row: title · composer · BPM ── */
 .practice-info-row {
+  flex-shrink: 0;
   position: relative;
   z-index: 25;
   display: flex;
@@ -1180,14 +1182,14 @@ input[type="range"].gold-slider::-webkit-slider-thumb {
   padding: 1px 5px;
 }
 
-/* ── Score area — flex-1, not absolute ── */
+/* ── Score area — takes remaining space, never collapses ── */
 .practice-score-box {
-  flex: 1 1 0;
-  min-height: 0;
+  flex: 1 1 auto;
+  min-height: 180px;
+  position: relative;
   z-index: 10;
-  overflow: auto;
-  display: flex;
-  align-items: center;
+  overflow-x: auto;
+  overflow-y: hidden;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -1203,6 +1205,7 @@ input[type="range"].gold-slider::-webkit-slider-thumb {
 
 /* ── Controls row: 3 columns — mode | play+reset | metronome ── */
 .practice-controls-row {
+  flex-shrink: 0;
   position: relative;
   z-index: 25;
   display: flex;
