@@ -96,7 +96,7 @@ export function OrnateFrame({ variant = 'card', className = '', children }: Orna
   const offset = 0
 
   return (
-    <div className={`relative text-gold ${sizeMap[variant]} ${className}`}>
+    <div className={`text-gold ${sizeMap[variant]} ${/absolute|fixed/.test(className) ? '' : 'relative'} ${className}`}>
       <CornerOrnament position="tl" offset={offset} />
       <CornerOrnament position="tr" offset={offset} />
       <CornerOrnament position="bl" offset={offset} />
