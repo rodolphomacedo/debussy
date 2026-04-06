@@ -277,7 +277,7 @@ export function ScoreRenderer({
     <div
       ref={containerRef}
       className="score-renderer"
-      style={{ overflowX: 'auto', width: '100%', minHeight: `${SCORE_HEIGHT}px` }}
+      style={{ minHeight: `${SCORE_HEIGHT}px` }}
     />
   )
 }

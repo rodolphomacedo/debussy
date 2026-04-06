@@ -1207,7 +1207,7 @@ input[type="range"].gold-slider::-webkit-slider-thumb {
 }
 
 .practice-score-inner {
-  width: 100%;
+  min-width: max-content;
   padding: 8px 24px 12px;
 }
 

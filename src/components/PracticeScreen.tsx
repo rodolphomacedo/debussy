@@ -111,12 +111,13 @@ export function PracticeScreen({
     onComplete: handleComplete,
   })
 
-  // Auto-scroll score box to follow the cursor
+  // Auto-scroll: keep the cursor centered in the visible score area
   useEffect(() => {
     if (!isPlaying || !scoreBoxRef.current) return
     const box = scoreBoxRef.current
     const cursorX = computeScoreCursorX(currentBeat, score.numBeats)
-    const target = cursorX - box.clientWidth / 3
+    // Keep cursor at ~40% from left so notes ahead stay visible
+    const target = cursorX - box.clientWidth * 0.4
     box.scrollLeft = Math.max(0, target)
   }, [currentBeat, isPlaying, score.numBeats])
 
