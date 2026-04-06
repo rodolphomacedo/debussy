@@ -82,3 +82,19 @@ The practice screen has **EXACTLY 2 parts** — no intermediate sections. Period
 - `.practice-top-section`: `flex: 1 1 0` — takes all space except keyboard
 - `.practice-score-box`: `flex: 1 1 auto; min-height: 180px` — never collapses
 - `.practice-header-row`, `.practice-info-row`, `.practice-controls-row`: `flex-shrink: 0` — never collapse
+
+**OrnateFrame critical rule:**
+`OrnateFrame` hardcodes `relative` inside the component. In Tailwind, `.relative`
+is generated AFTER `.absolute` in the stylesheet, so it would override `absolute inset-0`
+passed as a className prop — making the frame a flex item instead of an overlay and
+pushing all content outside the frame boundary.
+The fix (already in `OrnateFrame.tsx`): skip `relative` when `absolute`/`fixed` is
+detected in the className prop. Never revert this logic.
+
+**This layout was validated and approved.** Do not change the 2-part structure.
+The screen looks correct when:
+- The four golden ornament corners frame the ENTIRE top section
+- Header (Debussy logo + song info) appears at the top, inside the frame
+- Sheet music (gold notes on dark background) fills the middle
+- Controls (Listen/Practice/Play/Reset/Metro) sit at the bottom, inside the frame
+- Piano keyboard occupies the bottom strip, below the frame
