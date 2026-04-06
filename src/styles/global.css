@@ -1110,7 +1110,7 @@ input[type="range"].gold-slider::-webkit-slider-thumb {
   border-bottom: 1px solid rgba(160, 120, 38, 0.25);
 }
 
-/* ── Header row: back · Debussy logo · stats ── */
+/* ── Header row: back · [centered title block] · stats ── */
 .practice-header-row {
   flex-shrink: 0;
   position: relative;
@@ -1118,8 +1118,20 @@ input[type="range"].gold-slider::-webkit-slider-thumb {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 20px 4px;
+  padding: 10px 20px 12px;
   background: linear-gradient(to bottom, rgba(20,16,8,0.7) 0%, transparent 100%);
+}
+
+/* Title + info absolutely centered in the header row */
+.practice-title-block {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  pointer-events: none;
 }
 
 .practice-logo-text {
@@ -1140,16 +1152,12 @@ input[type="range"].gold-slider::-webkit-slider-thumb {
   font-size: 12px;
 }
 
-/* ── Info row: title · composer · BPM ── */
+/* ── Info row: title · composer · BPM (inside title block) ── */
 .practice-info-row {
-  flex-shrink: 0;
-  position: relative;
-  z-index: 25;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 4px 20px 10px;
   flex-wrap: wrap;
 }
 
@@ -1278,11 +1286,11 @@ input[type="range"].gold-slider::-webkit-slider-thumb {
 /* ── Responsive: tablet+ ── */
 @media (min-width: 640px) {
   .practice-header-row {
-    padding: 12px 24px 4px;
+    padding: 12px 24px 14px;
   }
   .practice-logo-text { font-size: 22px; }
   .practice-stats { gap: 14px; font-size: 13px; }
-  .practice-info-row { padding: 4px 24px 12px; gap: 8px; }
+  .practice-info-row { gap: 8px; }
   .practice-song-name { font-size: 12px; }
   .practice-composer  { font-size: 11px; }
   .practice-bpm-badge { font-size: 10px; }
@@ -1307,8 +1315,7 @@ input[type="range"].gold-slider::-webkit-slider-thumb {
   .practice-keyboard { height: clamp(110px, 22vh, 170px); }
   .practice-play-btn { width: 40px; height: 40px; }
   .practice-reset-btn { padding: 3px 8px; font-size: 9px; }
-  .practice-header-row { padding: 8px 52px 4px; }
-  .practice-info-row   { padding: 2px 52px 8px; }
+  .practice-header-row { padding: 10px 52px 12px; }
   .practice-controls-row { padding: 8px 52px; }
   .practice-score-inner { padding: 6px 12px 10px; }
   .corner-ornament svg { width: 50px; height: 50px; }

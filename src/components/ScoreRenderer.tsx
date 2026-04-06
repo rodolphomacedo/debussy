@@ -15,6 +15,21 @@ const TREBLE_Y = 40
 const BASS_Y = 150
 const FIRST_STAVE_EXTRA = 60
 const SCORE_HEIGHT = 260
+
+/** Returns the pixel X position of the playback cursor for a given beat. */
+export function computeScoreCursorX(beat: number, numBeats: number): number {
+  const measureIndex = Math.floor(beat / numBeats)
+  const beatInMeasure = beat % numBeats
+  let x = STAVE_PADDING
+  for (let i = 0; i < measureIndex; i++) {
+    x += i === 0 ? STAVE_WIDTH + FIRST_STAVE_EXTRA : STAVE_WIDTH
+  }
+  const w = measureIndex === 0 ? STAVE_WIDTH + FIRST_STAVE_EXTRA : STAVE_WIDTH
+  const noteArea = w - (measureIndex === 0 ? 90 : 30)
+  const offset = measureIndex === 0 ? 80 : 20
+  x += offset + (beatInMeasure / numBeats) * noteArea
+  return x
+}
 const CURSOR_COLOR = '#D4AF37'
 const HIT_COLOR = '#4caf7a'
 const MISS_COLOR = '#c94c4c'

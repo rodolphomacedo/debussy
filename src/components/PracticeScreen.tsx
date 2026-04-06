@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion } from 'motion/react'
 import { PianoKeyboard } from './PianoKeyboard'
-import { ScoreRenderer } from './ScoreRenderer'
+import { ScoreRenderer, computeScoreCursorX } from './ScoreRenderer'
 import { OrnateFrame } from './OrnateFrame'
 import { PracticeHeader } from './PracticeHeader'
 import { PracticeControls } from './PracticeControls'
@@ -47,6 +47,7 @@ export function PracticeScreen({
   const startTimeRef      = useRef(0)
   const pendingExpRef     = useRef<ExpectedNote[]>([])
   const isPlayingRef      = useRef(false)
+  const scoreBoxRef       = useRef<HTMLDivElement>(null)
 
   // Reset scoring state when mode changes
   useEffect(() => {
@@ -105,10 +106,19 @@ export function PracticeScreen({
   const { start, stop, reset, currentBeat, isPlaying, progress } = usePlayback({
     score, bpm,
     metronome,
-    autoPlayNotes: mode === 'listen',
+    autoPlayNotes: true,
     onExpectedNote: handleExpectedNote,
     onComplete: handleComplete,
   })
+
+  // Auto-scroll score box to follow the cursor
+  useEffect(() => {
+    if (!isPlaying || !scoreBoxRef.current) return
+    const box = scoreBoxRef.current
+    const cursorX = computeScoreCursorX(currentBeat, score.numBeats)
+    const target = cursorX - box.clientWidth / 3
+    box.scrollLeft = Math.max(0, target)
+  }, [currentBeat, isPlaying, score.numBeats])
 
   // Track MIDI input during practice mode
   useEffect(() => {
@@ -174,7 +184,7 @@ export function PracticeScreen({
         />
 
         {/* ── Score area ── */}
-        <div className="practice-score-box">
+        <div ref={scoreBoxRef} className="practice-score-box">
           <div className="practice-score-inner">
             <ScoreRenderer
               score={score}
